@@ -66,13 +66,7 @@
       background-color: #0056b3;
     }
     .lock-container {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 5px;
-    }
-    .lock-container input[type="checkbox"] {
-      margin: 0;
+      display: none; /* Escondemos las checkboxes de bloqueo por ahora */
     }
     table {
       width: 100%;
@@ -90,7 +84,6 @@
     tr:nth-child(even) {
       background-color: #f9f9f9;
     }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -207,64 +200,84 @@
     // --- DATOS ---
     let registros = JSON.parse(localStorage.getItem('registrosPortadas')) || [];
     let dependenciasData = [];
+    let opciones = {
+      medios: [],
+      recursos: [],
+      dependencias: [],
+      temas: [],
+      estatus: []
+    };
 
-    // --- UTILIDADES CSV ---
-    function csvToArray(text) {
-      const lines = text.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
-      return lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim());
-        const obj = {};
-        headers.forEach((h, i) => obj[h] = values[i] || '');
-        return obj;
+    // --- CARGAR CSV ---
+    async function loadCSV(filename) {
+      try {
+        const response = await fetch(filename);
+        if (!response.ok) throw new Error(`${filename} no encontrado`);
+        const text = await response.text();
+        const lines = text.trim().split('\n');
+        const headers = lines[0].split(',').map(h => h.trim());
+        return lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
+          const obj = {};
+          headers.forEach((h, i) => obj[h] = values[i] || '');
+          return obj;
+        });
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    }
+
+    // --- ACTUALIZAR DATALIST ---
+    function actualizarDatalist(inputId, valores) {
+      const datalist = document.getElementById('lista_' + inputId);
+      if (!datalist) return;
+      datalist.innerHTML = '';
+      [...new Set(valores)].forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        datalist.appendChild(opt);
       });
     }
 
-    async function loadCSV(filename) {
-      const response = await fetch(filename);
-      if (!response.ok) throw new Error(`Archivo no encontrado: ${filename}`);
-      const text = await response.text();
-      return csvToArray(text);
-    }
-
-    // --- FILTRO Y AUTOCOMPLETADO ---
-    function setupAutocomplete(inputId, options) {
+    // --- FILTRAR AUTOCOMPLETADO ---
+    function setupAutocomplete(inputId) {
       const input = document.getElementById(inputId);
-      const listId = 'lista_' + inputId;
-      const datalist = document.getElementById(listId);
-
-      if (!datalist || !input) return;
+      if (!input) return;
 
       input.addEventListener('input', () => {
-        const value = input.value.toLowerCase();
-        datalist.innerHTML = '';
-        const filtered = options.filter(opt => opt.toLowerCase().includes(value));
-        filtered.forEach(opt => {
-          const optEl = document.createElement('option');
-          optEl.value = opt;
-          datalist.appendChild(optEl);
-        });
+        const valor = input.value.toLowerCase();
+        const lista = opciones[inputId] || [];
+        const filtrados = lista.filter(opt => opt.toLowerCase().includes(valor));
+        actualizarDatalist(inputId, filtrados);
       });
 
-      // Permitir Enter/Tab para completar
       input.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab' || e.key === 'Enter') {
-          const matched = options.find(opt => opt.toLowerCase() === input.value.toLowerCase());
-          if (matched) {
-            input.value = matched;
+        if (e.key === 'Enter' || e.key === 'Tab') {
+          const valor = input.value.trim();
+          const coincidencia = (opciones[inputId] || []).find(opt => 
+            opt.toLowerCase() === valor.toLowerCase()
+          );
+          if (coincidencia) {
+            input.value = coincidencia;
             e.preventDefault();
-            input.dispatchEvent(new Event('input'));
+            // Enfocar el siguiente campo
+            const todosInputs = ['fecha','medio','titular','recurso','dependencia','organismo','tema','estatus'];
+            const idx = todosInputs.indexOf(inputId);
+            if (idx < todosInputs.length - 1) {
+              const siguiente = document.getElementById(todosInputs[idx + 1]);
+              if (siguiente) siguiente.focus();
+            }
           }
         }
       });
     }
 
-    // --- ACTUALIZAR ORGANISMO ---
-    function fillOrganismoSelect(dependencia) {
+    // --- ORGANISMO POR DEPENDENCIA ---
+    function actualizarOrganismo(dependencia) {
       const select = document.getElementById('organismo');
       select.innerHTML = '<option value="">-- Seleccionar --</option>';
       if (!dependencia) return;
-
       const organismos = [...new Set(
         dependenciasData
           .filter(d => d.Dependencia === dependencia)
@@ -278,154 +291,120 @@
       });
     }
 
-    // --- GUARDAR REGISTRO ---
+    // --- GUARDAR ---
     function guardarRegistro() {
       const campos = ['fecha', 'medio', 'titular', 'recurso', 'dependencia', 'organismo', 'tema', 'estatus'];
       const nuevo = {};
-      let valido = true;
-
-      for (let campo of campos) {
-        const el = document.getElementById(campo);
+      for (let c of campos) {
+        const el = document.getElementById(c);
         if (!el.value.trim()) {
-          valido = false;
-          break;
+          alert('⚠️ Completa todos los campos.');
+          return;
         }
-        nuevo[campo] = el.value.trim();
+        nuevo[c] = el.value.trim();
       }
-
-      if (!valido) {
-        alert('⚠️ Por favor, completa todos los campos.');
-        return;
-      }
-
       registros.push(nuevo);
       localStorage.setItem('registrosPortadas', JSON.stringify(registros));
       actualizarTabla();
 
-      // Limpiar campos no bloqueados
-      for (let campo of campos) {
-        const lock = document.getElementById(`lock_${campo}`);
+      // Limpiar no bloqueados (solo si decides mantener checkboxes)
+      for (let c of campos) {
+        const lock = document.getElementById(`lock_${c}`);
         if (!lock || !lock.checked) {
-          const el = document.getElementById(campo);
-          if (el.tagName === 'SELECT') {
-            el.selectedIndex = 0;
-          } else {
-            el.value = '';
-          }
+          const el = document.getElementById(c);
+          if (el.tagName === 'SELECT') el.selectedIndex = 0;
+          else el.value = '';
         }
       }
-
-      // Enfocar en "titular"
       document.getElementById('titular').focus();
     }
 
-    // --- ACTUALIZAR TABLA ---
+    // --- TABLA Y DESCARGA ---
     function actualizarTabla() {
       const tbody = document.getElementById('cuerpoTabla');
       tbody.innerHTML = '';
-      registros.forEach(reg => {
+      registros.forEach(r => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${reg.fecha}</td>
-          <td>${reg.medio}</td>
-          <td>${reg.titular}</td>
-          <td>${reg.recurso}</td>
-          <td>${reg.dependencia}</td>
-          <td>${reg.organismo}</td>
-          <td>${reg.tema}</td>
-          <td>${reg.estatus}</td>
-        `;
+        tr.innerHTML = `<td>${r.fecha}</td><td>${r.medio}</td><td>${r.titular}</td><td>${r.recurso}</td><td>${r.dependencia}</td><td>${r.organismo}</td><td>${r.tema}</td><td>${r.estatus}</td>`;
         tbody.appendChild(tr);
       });
     }
 
-    // --- DESCARGAR CSV ---
     function descargarCSV() {
-      if (registros.length === 0) {
-        alert('No hay registros para descargar.');
-        return;
-      }
+      if (!registros.length) return alert('No hay registros.');
       let csv = 'Fecha,Medio,Titular,Recurso editorial,Dependencia,Organismo,Tema,Estatus\n';
       csv += registros.map(r =>
         `"${r.fecha}","${r.medio}","${r.titular}","${r.recurso}","${r.dependencia}","${r.organismo}","${r.tema}","${r.estatus}"`
       ).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'}));
       a.download = 'captura_portadas.csv';
       a.click();
-      URL.revokeObjectURL(url);
     }
 
-    // --- BLOQUEAR CAMPO CON TECLA ---
-    function toggleLock() {
-      const active = document.activeElement;
-      if (active && active.id) {
-        const campo = active.id;
-        const lock = document.getElementById(`lock_${campo}`);
-        if (lock) {
-          lock.checked = !lock.checked;
-        }
-      }
-    }
-
-    // --- INICIALIZACIÓN ---
+    // --- INICIALIZAR ---
     document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        // Cargar CSV
-        const medios = (await loadCSV('Medio.csv')).map(r => r.Medio).filter(Boolean);
-        const recursos = (await loadCSV('Recurso.csv')).map(r => r.Recurso).filter(Boolean);
-        const temas = (await loadCSV('Tema.csv')).map(r => r.Tema).filter(Boolean);
-        const estatus = (await loadCSV('Estatus.csv')).map(r => r.Estatus).filter(Boolean);
-        dependenciasData = await loadCSV('Dependencia.csv');
-        const dependencias = [...new Set(dependenciasData.map(d => d.Dependencia))];
+      // Cargar datos
+      const data = await Promise.all([
+        loadCSV('Medio.csv').then(d => d.map(r => r.Medio).filter(Boolean)),
+        loadCSV('Recurso.csv').then(d => d.map(r => r.Recurso).filter(Boolean)),
+        loadCSV('Dependencia.csv'),
+        loadCSV('Tema.csv').then(d => d.map(r => r.Tema).filter(Boolean)),
+        loadCSV('Estatus.csv').then(d => d.map(r => r.Estatus).filter(Boolean))
+      ]);
 
-        // Llenar listas
-        setupAutocomplete('medio', medios);
-        setupAutocomplete('recurso', recursos);
-        setupAutocomplete('dependencia', dependencias);
-        setupAutocomplete('tema', temas);
+      opciones.medios = data[0];
+      opciones.recursos = data[1];
+      dependenciasData = data[2];
+      opciones.dependencias = [...new Set(dependenciasData.map(d => d.Dependencia))];
+      opciones.temas = data[3];
+      opciones.estatus = data[4];
 
-        const estatusSel = document.getElementById('estatus');
-        estatus.forEach(opt => {
-          const el = document.createElement('option');
-          el.value = opt;
-          el.textContent = opt;
-          estatusSel.appendChild(el);
-        });
+      // Llenar listas
+      actualizarDatalist('medio', opciones.medios);
+      actualizarDatalist('recurso', opciones.recursos);
+      actualizarDatalist('dependencia', opciones.dependencias);
+      actualizarDatalist('tema', opciones.temas);
 
-        // Evento para organismo
-        document.getElementById('dependencia').addEventListener('input', (e) => {
-          fillOrganismoSelect(e.target.value);
-        });
+      const estatusSel = document.getElementById('estatus');
+      estatusSel.innerHTML = '<option value="">-- Seleccionar --</option>';
+      opciones.estatus.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt;
+        el.textContent = opt;
+        estatusSel.appendChild(el);
+      });
 
-        // Eventos
-        document.getElementById('formulario').addEventListener('submit', (e) => {
+      // Autocompletado
+      ['medio','recurso','dependencia','tema'].forEach(id => setupAutocomplete(id));
+
+      // Dependencia → Organismo
+      document.getElementById('dependencia').addEventListener('input', (e) => {
+        actualizarOrganismo(e.target.value);
+      });
+
+      // Eventos
+      document.getElementById('formulario').addEventListener('submit', e => {
+        e.preventDefault(); guardarRegistro();
+      });
+      document.getElementById('btnDescargar').addEventListener('click', descargarCSV);
+
+      // Atajos: Ctrl+Q y Ctrl+Shift+K (cambiado por seguridad)
+      document.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 'q') {
+          e.preventDefault(); guardarRegistro();
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'k') {
           e.preventDefault();
-          guardarRegistro();
-        });
-        document.getElementById('btnDescargar').addEventListener('click', descargarCSV);
-
-        // Atajos de teclado
-        document.addEventListener('keydown', (e) => {
-          if (e.ctrlKey && e.key === 'q') {
-            e.preventDefault();
-            guardarRegistro();
+          const activo = document.activeElement;
+          if (activo && activo.id) {
+            const lock = document.getElementById(`lock_${activo.id}`);
+            if (lock) lock.checked = !lock.checked;
           }
-          if (e.ctrlKey && e.shiftKey && e.key === 'l') {
-            e.preventDefault();
-            toggleLock();
-          }
-        });
+        }
+      });
 
-        // Cargar registros guardados
-        actualizarTabla();
-
-      } catch (err) {
-        console.error(err);
-        alert('⚠️ Error al cargar los datos. Verifica que los archivos CSV estén en la raíz.');
-      }
+      actualizarTabla();
     });
   </script>
 </body>
