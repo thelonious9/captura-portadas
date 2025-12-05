@@ -49,8 +49,12 @@
       font-size: 14px;
     }
     input.locked, select.locked, textarea.locked {
-      background-color: #f0f8ff;
+      background-color: #f0f8ff !important;
       border-left: 4px solid #007bff;
+    }
+    input:disabled, textarea:disabled, select:disabled {
+      background-color: #f0f8ff !important;
+      color: #333;
     }
     textarea {
       resize: vertical;
@@ -82,23 +86,9 @@
     th {
       background-color: #f2f2f2;
     }
-    .btn-edit {
-      background-color: #ffc107;
-      color: #212529;
-      padding: 2px 6px;
-      font-size: 12px;
-    }
-    .btn-delete {
-      background-color: #dc3545;
-      color: white;
-      padding: 2px 6px;
-      font-size: 12px;
-    }
-    .error {
-      color: red;
-      font-size: 12px;
-      margin-top: 5px;
-    }
+    .btn-edit { background-color: #ffc107; color: #212529; padding: 2px 6px; font-size: 12px; }
+    .btn-delete { background-color: #dc3545; color: white; padding: 2px 6px; font-size: 12px; }
+    .error { color: red; font-size: 12px; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -191,16 +181,17 @@
     let registros = JSON.parse(localStorage.getItem('registrosPortadas')) || [];
     let dependenciasData = [];
     let opciones = { medios: [], recursos: [], dependencias: [], temas: [], estatus: [] };
-    let editandoId = null; // Para saber si estamos editando
+    let editandoId = null;
 
+    // Cargar CSV genérico
     async function loadCSV(filename) {
       try {
         const response = await fetch(filename + '?t=' + Date.now());
         if (!response.ok) throw new Error(`${filename} no encontrado`);
         const text = await response.text();
-        const lines = text.trim().split('\n');
-        if (lines.length < 2) throw new Error(`${filename} está vacío`);
-        return lines.slice(1).map(line => line.split(',').map(v => v.trim())[0]).filter(v => v);
+        const lines = text.trim().split('\n').filter(l => l.trim());
+        if (lines.length < 2) throw new Error(`${filename} sin datos`);
+        return lines.slice(1).map(l => l.split(',')[0].trim()).filter(v => v);
       } catch (err) {
         console.error(err);
         return [];
@@ -229,11 +220,17 @@
       });
     }
 
+    function bloquearCampo(campo) {
+      campo.disabled = !campo.disabled;
+      campo.classList.toggle('locked');
+    }
+
     function setupAutocomplete(fieldId, source) {
       const input = document.getElementById(fieldId);
       if (!input) return;
 
       input.addEventListener('input', () => {
+        if (input.disabled) return;
         const val = input.value.toLowerCase();
         const filtered = source.filter(opt => opt.toLowerCase().includes(val));
         fillDatalist(fieldId, filtered);
@@ -241,6 +238,7 @@
 
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === 'Tab') {
+          if (input.disabled) return;
           const val = input.value.trim();
           const match = source.find(opt => opt.toLowerCase() === val.toLowerCase());
           if (match) {
@@ -261,9 +259,7 @@
       const sel = document.getElementById('organismo');
       sel.innerHTML = '<option value="">-- Seleccionar --</option>';
       if (!dep) return;
-      const orgs = [...new Set(
-        dependenciasData.filter(d => d.Dependencia === dep).map(d => d.Organismo)
-      )];
+      const orgs = [...new Set(dependenciasData.filter(d => d.Dependencia === dep).map(d => d.Organismo))];
       orgs.forEach(o => {
         const opt = document.createElement('option');
         opt.value = o;
@@ -285,12 +281,10 @@
       }
 
       if (editandoId !== null) {
-        // Actualizar registro existente
         registros[editandoId] = nuevo;
         editandoId = null;
       } else {
-        // Nuevo registro
-        nuevo.id = registros.length + 1; // ID único
+        nuevo.id = registros.length + 1;
         registros.push(nuevo);
       }
 
@@ -304,37 +298,11 @@
       const campos = ['fecha','medio','titular','recurso','dependencia','tema','estatus'];
       campos.forEach(id => {
         const el = document.getElementById(id);
-        if (el.tagName === 'SELECT') el.selectedIndex = 0;
-        else el.value = '';
+        el.value = '';
+        el.disabled = false;
+        el.classList.remove('locked');
       });
       document.getElementById('organismo').innerHTML = '<option value="">-- Seleccionar dependencia primero --</option>';
-    }
-
-    function editarRegistro(id) {
-      const reg = registros[id];
-      editandoId = id;
-      Object.keys(reg).forEach(key => {
-        if (key !== 'id') {
-          const el = document.getElementById(key);
-          if (el) el.value = reg[key];
-        }
-      });
-      // Actualizar organismo si hay dependencia
-      if (reg.dependencia) {
-        updateOrganismo(reg.dependencia);
-        document.getElementById('organismo').value = reg.organismo;
-      }
-      document.getElementById('titular').focus();
-    }
-
-    function eliminarRegistro(id) {
-      if (confirm('¿Estás seguro de eliminar este registro?')) {
-        registros.splice(id, 1);
-        // Reajustar IDs
-        registros.forEach((r, i) => r.id = i + 1);
-        localStorage.setItem('registrosPortadas', JSON.stringify(registros));
-        actualizarTabla();
-      }
     }
 
     function actualizarTabla() {
@@ -361,6 +329,35 @@
       });
     }
 
+    function editarRegistro(id) {
+      const reg = registros[id];
+      editandoId = id;
+      Object.keys(reg).forEach(key => {
+        if (key !== 'id') {
+          const el = document.getElementById(key);
+          if (el) {
+            el.value = reg[key];
+            el.disabled = false;
+            el.classList.remove('locked');
+          }
+        }
+      });
+      if (reg.dependencia) {
+        updateOrganismo(reg.dependencia);
+        document.getElementById('organismo').value = reg.organismo;
+      }
+      document.getElementById('titular').focus();
+    }
+
+    function eliminarRegistro(id) {
+      if (confirm('¿Estás seguro?')) {
+        registros.splice(id, 1);
+        registros.forEach((r, i) => r.id = i + 1);
+        localStorage.setItem('registrosPortadas', JSON.stringify(registros));
+        actualizarTabla();
+      }
+    }
+
     function descargarCSV() {
       if (!registros.length) return alert('No hay registros.');
       let csv = 'ID,Fecha,Medio,Titular,Recurso editorial,Dependencia,Organismo,Tema,Estatus\n';
@@ -380,18 +377,16 @@
         loadCSV('Medio.csv'),
         loadCSV('Recurso.csv'),
         fetch('Dependencia.csv?t=' + Date.now()).then(r => r.text()).then(t => {
-          const lines = t.trim().split('\n');
-          const rows = lines.slice(1).map(l => {
+          const lines = t.trim().split('\n').filter(l => l.trim());
+          return lines.slice(1).map(l => {
             const [d, o] = l.split(',').map(x => x.trim());
             return { Dependencia: d, Organismo: o };
           });
-          return rows;
-        }).catch(e => { console.error('Error Dependencia.csv', e); return []; }),
+        }).catch(() => []),
         loadCSV('Tema.csv'),
         loadCSV('Estatus.csv')
       ]);
 
-      // Guardar
       opciones.medios = medios;
       opciones.recursos = recursos;
       dependenciasData = depData;
@@ -399,12 +394,12 @@
       opciones.temas = temas;
       opciones.estatus = estatus;
 
-      // Diagnóstico visual
-      if (medios.length === 0) document.getElementById('err_medio').textContent = '⚠️ Medio.csv no cargado';
-      if (recursos.length === 0) document.getElementById('err_recurso').textContent = '⚠️ Recurso.csv no cargado';
-      if (opciones.dependencias.length === 0) document.getElementById('err_dependencia').textContent = '⚠️ Dependencia.csv no cargado';
-      if (temas.length === 0) document.getElementById('err_tema').textContent = '⚠️ Tema.csv no cargado';
-      if (estatus.length === 0) document.getElementById('err_estatus').textContent = '⚠️ Estatus.csv no cargado';
+      // Mensajes de error
+      if (medios.length === 0) document.getElementById('err_medio').textContent = '⚠️ Medio.csv vacío o no encontrado';
+      if (recursos.length === 0) document.getElementById('err_recurso').textContent = '⚠️ Recurso.csv vacío o no encontrado';
+      if (opciones.dependencias.length === 0) document.getElementById('err_dependencia').textContent = '⚠️ Dependencia.csv sin datos';
+      if (temas.length === 0) document.getElementById('err_tema').textContent = '⚠️ Tema.csv vacío o no encontrado';
+      if (estatus.length === 0) document.getElementById('err_estatus').textContent = '⚠️ Estatus.csv vacío o no encontrado';
 
       // Llenar listas
       fillDatalist('medio', medios);
@@ -413,26 +408,21 @@
       fillDatalist('tema', temas);
       fillSelect('estatus', estatus);
 
-      // Autocompletado
       ['medio','recurso','dependencia','tema'].forEach(id => setupAutocomplete(id, opciones[id]));
-
-      // Dependencia → Organismo
-      document.getElementById('dependencia').addEventListener('input', e => {
-        updateOrganismo(e.target.value);
-      });
+      document.getElementById('dependencia').addEventListener('input', e => updateOrganismo(e.target.value));
 
       // Eventos
       document.getElementById('btnGuardar').addEventListener('click', guardarRegistro);
       document.getElementById('btnDescargar').addEventListener('click', descargarCSV);
 
-      // Atajos
+      // Atajo para bloquear/desbloquear
       document.addEventListener('keydown', e => {
         if (e.ctrlKey && e.key === 'q') { e.preventDefault(); guardarRegistro(); }
         if (e.altKey && e.key === 'l') {
           e.preventDefault();
           const active = document.activeElement;
           if (active && ['INPUT','TEXTAREA','SELECT'].includes(active.tagName)) {
-            active.classList.toggle('locked');
+            bloquearCampo(active);
           }
         }
       });
@@ -440,7 +430,6 @@
       actualizarTabla();
     });
 
-    // Hacer funciones globales para botones
     window.editarRegistro = editarRegistro;
     window.eliminarRegistro = eliminarRegistro;
   </script>
