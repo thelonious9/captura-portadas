@@ -4,7 +4,72 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Captura de Portadas</title>
-  <link rel="stylesheet" href="estilos.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+    .form-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 15px;
+    }
+    .form-col {
+      flex: 1;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #444;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 50px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -18,61 +83,144 @@
         <div class="form-col">
           <label for="medio">Medio</label>
           <input type="text" id="medio" name="medio" list="lista_medios" required>
-          <datalist id="lista_medios">
-            <!-- Aquí puedes agregar opciones predefinidas si lo deseas -->
-          </datalist>
+          <datalist id="lista_medios"></datalist>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-col">
           <label for="titular">Titular</label>
-          <textarea id="titular" name="titular" rows="2" required></textarea>
+          <textarea id="titular" name="titular" required></textarea>
         </div>
         <div class="form-col">
-          <label for="recurso_editorial">Recurso editorial</label>
-          <input type="text" id="recurso_editorial" name="recurso_editorial" required>
+          <label for="recurso">Recurso editorial</label>
+          <input type="text" id="recurso" name="recurso" list="lista_recursos" required>
+          <datalist id="lista_recursos"></datalist>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-col">
           <label for="dependencia">Dependencia</label>
-          <input type="text" id="dependencia" name="dependencia" list="lista_dependencias">
+          <input type="text" id="dependencia" name="dependencia" list="lista_dependencias" required>
           <datalist id="lista_dependencias"></datalist>
         </div>
         <div class="form-col">
           <label for="organismo">Organismo</label>
-          <input type="text" id="organismo" name="organismo" list="lista_organismos">
-          <datalist id="lista_organismos"></datalist>
+          <select id="organismo" name="organismo" required>
+            <option value="">-- Seleccionar dependencia primero --</option>
+          </select>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-col">
           <label for="tema">Tema</label>
-          <input type="text" id="tema" name="tema" list="lista_temas">
+          <input type="text" id="tema" name="tema" list="lista_temas" required>
           <datalist id="lista_temas"></datalist>
         </div>
         <div class="form-col">
           <label for="estatus">Estatus</label>
           <select id="estatus" name="estatus" required>
             <option value="">-- Seleccionar --</option>
-            <option value="capturado">Capturado</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="revisado">Revisado</option>
           </select>
         </div>
       </div>
 
-      <button type="submit">Enviar</button>
+      <button type="submit">Guardar registro</button>
+      <div id="mensaje" class="error"></div>
     </form>
   </div>
 
   <script>
-    document.getElementById('formulario').addEventListener('submit', function(e) {
-      e.preventDefault();
-      alert('Formulario enviado (simulado). En una versión real, conectarías a una base de datos o Google Sheets.');
+    // --- UTILIDADES ---
+    function csvToArray(text) {
+      const lines = text.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = values[i] || '');
+        return obj;
+      });
+    }
+
+    async function loadCSV(filename) {
+      const response = await fetch(filename);
+      if (!response.ok) throw new Error(`Archivo no encontrado: ${filename}`);
+      const text = await response.text();
+      return csvToArray(text);
+    }
+
+    function fillDatalist(id, items) {
+      const list = document.getElementById(id);
+      if (!list) return;
+      list.innerHTML = '';
+      [...new Set(items)].forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        list.appendChild(opt);
+      });
+    }
+
+    function fillSelect(id, items) {
+      const select = document.getElementById(id);
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Seleccionar --</option>';
+      [...new Set(items)].forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        select.appendChild(opt);
+      });
+    }
+
+    // --- INICIALIZACIÓN ---
+    document.addEventListener('DOMContentLoaded', async () => {
+      let dependenciasData = [];
+
+      try {
+        // Cargar todos los CSV desde la raíz
+        const medios = (await loadCSV('Medio.csv')).map(r => r.Medio).filter(Boolean);
+        const recursos = (await loadCSV('Recurso.csv')).map(r => r.Recurso).filter(Boolean);
+        const temas = (await loadCSV('Tema.csv')).map(r => r.Tema).filter(Boolean);
+        const estatus = (await loadCSV('Estatus.csv')).map(r => r.Estatus).filter(Boolean);
+
+        dependenciasData = await loadCSV('Dependencia.csv');
+        const dependencias = [...new Set(dependenciasData.map(d => d.Dependencia))];
+
+        // Llenar listas
+        fillDatalist('lista_medios', medios);
+        fillDatalist('lista_recursos', recursos);
+        fillDatalist('lista_temas', temas);
+        fillSelect('estatus', estatus);
+        fillDatalist('lista_dependencias', dependencias);
+
+        // Guardar globalmente para uso en evento
+        window.dependenciasData = dependenciasData;
+
+        // Actualizar organismo al cambiar dependencia
+        document.getElementById('dependencia').addEventListener('input', (e) => {
+          const dep = e.target.value;
+          const organismos = dependenciasData
+            .filter(d => d.Dependencia === dep)
+            .map(d => d.Organismo)
+            .filter((v, i, a) => a.indexOf(v) === i);
+          fillSelect('organismo', organismos);
+        });
+
+        // Enviar formulario
+        document.getElementById('formulario').addEventListener('submit', (e) => {
+          e.preventDefault();
+          alert('✅ Registro guardado (simulado). En una versión real, se enviaría a una base de datos.');
+          document.getElementById('mensaje').textContent = '';
+        });
+
+      } catch (err) {
+        const msg = document.getElementById('mensaje');
+        msg.textContent = '⚠️ Error al cargar los datos. Verifica que los archivos CSV estén en la raíz del repositorio.';
+        console.error(err);
+      }
     });
   </script>
 </body>
