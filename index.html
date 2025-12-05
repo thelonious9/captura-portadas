@@ -48,6 +48,10 @@
       box-sizing: border-box;
       font-size: 14px;
     }
+    input.locked, select.locked, textarea.locked {
+      background-color: #f0f8ff;
+      border-left: 4px solid #007bff;
+    }
     textarea {
       resize: vertical;
       min-height: 50px;
@@ -65,9 +69,6 @@
     button:hover {
       background-color: #0056b3;
     }
-    .lock-container {
-      display: none; /* Escondemos las checkboxes de bloqueo por ahora */
-    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -81,8 +82,10 @@
     th {
       background-color: #f2f2f2;
     }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
+    .error {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -94,19 +97,12 @@
         <div class="form-col">
           <label for="fecha">Fecha</label>
           <input type="date" id="fecha" name="fecha" required>
-          <div class="lock-container">
-            <input type="checkbox" id="lock_fecha">
-            <label for="lock_fecha">🔒 Bloquear</label>
-          </div>
         </div>
         <div class="form-col">
           <label for="medio">Medio</label>
           <input type="text" id="medio" name="medio" autocomplete="off" required>
           <datalist id="lista_medios"></datalist>
-          <div class="lock-container">
-            <input type="checkbox" id="lock_medio">
-            <label for="lock_medio">🔒 Bloquear</label>
-          </div>
+          <div class="error" id="err_medio"></div>
         </div>
       </div>
 
@@ -114,19 +110,12 @@
         <div class="form-col">
           <label for="titular">Titular</label>
           <textarea id="titular" name="titular" required></textarea>
-          <div class="lock-container">
-            <input type="checkbox" id="lock_titular">
-            <label for="lock_titular">🔒 Bloquear</label>
-          </div>
         </div>
         <div class="form-col">
           <label for="recurso">Recurso editorial</label>
           <input type="text" id="recurso" name="recurso" autocomplete="off" required>
           <datalist id="lista_recursos"></datalist>
-          <div class="lock-container">
-            <input type="checkbox" id="lock_recurso">
-            <label for="lock_recurso">🔒 Bloquear</label>
-          </div>
+          <div class="error" id="err_recurso"></div>
         </div>
       </div>
 
@@ -135,20 +124,13 @@
           <label for="dependencia">Dependencia</label>
           <input type="text" id="dependencia" name="dependencia" autocomplete="off" required>
           <datalist id="lista_dependencias"></datalist>
-          <div class="lock-container">
-            <input type="checkbox" id="lock_dependencia">
-            <label for="lock_dependencia">🔒 Bloquear</label>
-          </div>
+          <div class="error" id="err_dependencia"></div>
         </div>
         <div class="form-col">
           <label for="organismo">Organismo</label>
           <select id="organismo" name="organismo" required>
             <option value="">-- Seleccionar dependencia primero --</option>
           </select>
-          <div class="lock-container">
-            <input type="checkbox" id="lock_organismo">
-            <label for="lock_organismo">🔒 Bloquear</label>
-          </div>
         </div>
       </div>
 
@@ -157,25 +139,20 @@
           <label for="tema">Tema</label>
           <input type="text" id="tema" name="tema" autocomplete="off" required>
           <datalist id="lista_temas"></datalist>
-          <div class="lock-container">
-            <input type="checkbox" id="lock_tema">
-            <label for="lock_tema">🔒 Bloquear</label>
-          </div>
+          <div class="error" id="err_tema"></div>
         </div>
         <div class="form-col">
           <label for="estatus">Estatus</label>
           <select id="estatus" name="estatus" required>
             <option value="">-- Seleccionar --</option>
           </select>
-          <div class="lock-container">
-            <input type="checkbox" id="lock_estatus">
-            <label for="lock_estatus">🔒 Bloquear</label>
-          </div>
+          <div class="error" id="err_estatus"></div>
         </div>
       </div>
 
-      <button type="submit" id="btnGuardar">Guardar registro</button>
+      <button type="submit" id="btnGuardar">Guardar registro (Ctrl+Q)</button>
       <button type="button" id="btnDescargar">📥 Descargar CSV</button>
+      <p><small>Atajo para bloquear: <strong>Alt + L</strong></small></p>
     </form>
 
     <h2>Registros Capturados</h2>
@@ -197,103 +174,96 @@
   </div>
 
   <script>
-    // --- DATOS ---
     let registros = JSON.parse(localStorage.getItem('registrosPortadas')) || [];
     let dependenciasData = [];
-    let opciones = {
-      medios: [],
-      recursos: [],
-      dependencias: [],
-      temas: [],
-      estatus: []
-    };
+    let opciones = { medios: [], recursos: [], dependencias: [], temas: [], estatus: [] };
 
-    // --- CARGAR CSV ---
     async function loadCSV(filename) {
       try {
-        const response = await fetch(filename);
+        const response = await fetch(filename + '?t=' + Date.now()); // evitar caché
         if (!response.ok) throw new Error(`${filename} no encontrado`);
         const text = await response.text();
         const lines = text.trim().split('\n');
+        if (lines.length < 2) throw new Error(`${filename} está vacío`);
         const headers = lines[0].split(',').map(h => h.trim());
+        const key = headers[0];
         return lines.slice(1).map(line => {
           const values = line.split(',').map(v => v.trim());
-          const obj = {};
-          headers.forEach((h, i) => obj[h] = values[i] || '');
-          return obj;
-        });
+          return values[0] || '';
+        }).filter(v => v);
       } catch (err) {
         console.error(err);
         return [];
       }
     }
 
-    // --- ACTUALIZAR DATALIST ---
-    function actualizarDatalist(inputId, valores) {
-      const datalist = document.getElementById('lista_' + inputId);
-      if (!datalist) return;
-      datalist.innerHTML = '';
-      [...new Set(valores)].forEach(v => {
+    function fillDatalist(id, items) {
+      const list = document.getElementById('lista_' + id);
+      if (!list) return;
+      list.innerHTML = '';
+      [...new Set(items)].forEach(item => {
         const opt = document.createElement('option');
-        opt.value = v;
-        datalist.appendChild(opt);
+        opt.value = item;
+        list.appendChild(opt);
       });
     }
 
-    // --- FILTRAR AUTOCOMPLETADO ---
-    function setupAutocomplete(inputId) {
-      const input = document.getElementById(inputId);
+    function fillSelect(id, items) {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '<option value="">-- Seleccionar --</option>';
+      [...new Set(items)].forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        sel.appendChild(opt);
+      });
+    }
+
+    function setupAutocomplete(fieldId, source) {
+      const input = document.getElementById(fieldId);
       if (!input) return;
 
       input.addEventListener('input', () => {
-        const valor = input.value.toLowerCase();
-        const lista = opciones[inputId] || [];
-        const filtrados = lista.filter(opt => opt.toLowerCase().includes(valor));
-        actualizarDatalist(inputId, filtrados);
+        const val = input.value.toLowerCase();
+        const filtered = source.filter(opt => opt.toLowerCase().includes(val));
+        fillDatalist(fieldId, filtered);
       });
 
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === 'Tab') {
-          const valor = input.value.trim();
-          const coincidencia = (opciones[inputId] || []).find(opt => 
-            opt.toLowerCase() === valor.toLowerCase()
-          );
-          if (coincidencia) {
-            input.value = coincidencia;
+          const val = input.value.trim();
+          const match = source.find(opt => opt.toLowerCase() === val.toLowerCase());
+          if (match) {
+            input.value = match;
             e.preventDefault();
-            // Enfocar el siguiente campo
-            const todosInputs = ['fecha','medio','titular','recurso','dependencia','organismo','tema','estatus'];
-            const idx = todosInputs.indexOf(inputId);
-            if (idx < todosInputs.length - 1) {
-              const siguiente = document.getElementById(todosInputs[idx + 1]);
-              if (siguiente) siguiente.focus();
+            const fields = ['fecha','medio','titular','recurso','dependencia','organismo','tema','estatus'];
+            const idx = fields.indexOf(fieldId);
+            if (idx < fields.length - 1) {
+              const next = document.getElementById(fields[idx + 1]);
+              if (next) next.focus();
             }
           }
         }
       });
     }
 
-    // --- ORGANISMO POR DEPENDENCIA ---
-    function actualizarOrganismo(dependencia) {
-      const select = document.getElementById('organismo');
-      select.innerHTML = '<option value="">-- Seleccionar --</option>';
-      if (!dependencia) return;
-      const organismos = [...new Set(
-        dependenciasData
-          .filter(d => d.Dependencia === dependencia)
-          .map(d => d.Organismo)
+    function updateOrganismo(dep) {
+      const sel = document.getElementById('organismo');
+      sel.innerHTML = '<option value="">-- Seleccionar --</option>';
+      if (!dep) return;
+      const orgs = [...new Set(
+        dependenciasData.filter(d => d.Dependencia === dep).map(d => d.Organismo)
       )];
-      organismos.forEach(org => {
+      orgs.forEach(o => {
         const opt = document.createElement('option');
-        opt.value = org;
-        opt.textContent = org;
-        select.appendChild(opt);
+        opt.value = o;
+        opt.textContent = o;
+        sel.appendChild(opt);
       });
     }
 
-    // --- GUARDAR ---
-    function guardarRegistro() {
-      const campos = ['fecha', 'medio', 'titular', 'recurso', 'dependencia', 'organismo', 'tema', 'estatus'];
+    function guardar() {
+      const campos = ['fecha','medio','titular','recurso','dependencia','organismo','tema','estatus'];
       const nuevo = {};
       for (let c of campos) {
         const el = document.getElementById(c);
@@ -306,20 +276,15 @@
       registros.push(nuevo);
       localStorage.setItem('registrosPortadas', JSON.stringify(registros));
       actualizarTabla();
-
-      // Limpiar no bloqueados (solo si decides mantener checkboxes)
-      for (let c of campos) {
-        const lock = document.getElementById(`lock_${c}`);
-        if (!lock || !lock.checked) {
-          const el = document.getElementById(c);
-          if (el.tagName === 'SELECT') el.selectedIndex = 0;
-          else el.value = '';
-        }
+      // Limpiar (sin bloqueo por ahora)
+      for (let c of ['fecha','medio','recurso','dependencia','tema','estatus']) {
+        document.getElementById(c + (c === 'estatus' ? '' : '')).value = '';
       }
+      document.getElementById('titular').value = '';
+      document.getElementById('organismo').innerHTML = '<option value="">-- Seleccionar dependencia primero --</option>';
       document.getElementById('titular').focus();
     }
 
-    // --- TABLA Y DESCARGA ---
     function actualizarTabla() {
       const tbody = document.getElementById('cuerpoTabla');
       tbody.innerHTML = '';
@@ -342,64 +307,68 @@
       a.click();
     }
 
-    // --- INICIALIZAR ---
+    // === INICIALIZAR ===
     document.addEventListener('DOMContentLoaded', async () => {
-      // Cargar datos
-      const data = await Promise.all([
-        loadCSV('Medio.csv').then(d => d.map(r => r.Medio).filter(Boolean)),
-        loadCSV('Recurso.csv').then(d => d.map(r => r.Recurso).filter(Boolean)),
-        loadCSV('Dependencia.csv'),
-        loadCSV('Tema.csv').then(d => d.map(r => r.Tema).filter(Boolean)),
-        loadCSV('Estatus.csv').then(d => d.map(r => r.Estatus).filter(Boolean))
+      // Cargar CSV
+      const [medios, recursos, depData, temas, estatus] = await Promise.all([
+        loadCSV('Medio.csv'),
+        loadCSV('Recurso.csv'),
+        fetch('Dependencia.csv?t=' + Date.now()).then(r => r.text()).then(t => {
+          const lines = t.trim().split('\n');
+          const rows = lines.slice(1).map(l => {
+            const [d, o] = l.split(',').map(x => x.trim());
+            return { Dependencia: d, Organismo: o };
+          });
+          return rows;
+        }).catch(e => { console.error('Error Dependencia.csv', e); return []; }),
+        loadCSV('Tema.csv'),
+        loadCSV('Estatus.csv')
       ]);
 
-      opciones.medios = data[0];
-      opciones.recursos = data[1];
-      dependenciasData = data[2];
-      opciones.dependencias = [...new Set(dependenciasData.map(d => d.Dependencia))];
-      opciones.temas = data[3];
-      opciones.estatus = data[4];
+      // Guardar
+      opciones.medios = medios;
+      opciones.recursos = recursos;
+      dependenciasData = depData;
+      opciones.dependencias = [...new Set(depData.map(d => d.Dependencia))];
+      opciones.temas = temas;
+      opciones.estatus = estatus;
+
+      // Diagnóstico visual
+      if (medios.length === 0) document.getElementById('err_medio').textContent = '⚠️ Medio.csv no cargado';
+      if (recursos.length === 0) document.getElementById('err_recurso').textContent = '⚠️ Recurso.csv no cargado';
+      if (opciones.dependencias.length === 0) document.getElementById('err_dependencia').textContent = '⚠️ Dependencia.csv no cargado';
+      if (temas.length === 0) document.getElementById('err_tema').textContent = '⚠️ Tema.csv no cargado';
+      if (estatus.length === 0) document.getElementById('err_estatus').textContent = '⚠️ Estatus.csv no cargado';
 
       // Llenar listas
-      actualizarDatalist('medio', opciones.medios);
-      actualizarDatalist('recurso', opciones.recursos);
-      actualizarDatalist('dependencia', opciones.dependencias);
-      actualizarDatalist('tema', opciones.temas);
-
-      const estatusSel = document.getElementById('estatus');
-      estatusSel.innerHTML = '<option value="">-- Seleccionar --</option>';
-      opciones.estatus.forEach(opt => {
-        const el = document.createElement('option');
-        el.value = opt;
-        el.textContent = opt;
-        estatusSel.appendChild(el);
-      });
+      fillDatalist('medio', medios);
+      fillDatalist('recurso', recursos);
+      fillDatalist('dependencia', opciones.dependencias);
+      fillDatalist('tema', temas);
+      fillSelect('estatus', estatus);
 
       // Autocompletado
-      ['medio','recurso','dependencia','tema'].forEach(id => setupAutocomplete(id));
+      ['medio','recurso','dependencia','tema'].forEach(id => setupAutocomplete(id, opciones[id]));
 
       // Dependencia → Organismo
-      document.getElementById('dependencia').addEventListener('input', (e) => {
-        actualizarOrganismo(e.target.value);
+      document.getElementById('dependencia').addEventListener('input', e => {
+        updateOrganismo(e.target.value);
       });
 
       // Eventos
-      document.getElementById('formulario').addEventListener('submit', e => {
-        e.preventDefault(); guardarRegistro();
-      });
+      document.getElementById('formulario').addEventListener('submit', e => { e.preventDefault(); guardar(); });
       document.getElementById('btnDescargar').addEventListener('click', descargarCSV);
 
-      // Atajos: Ctrl+Q y Ctrl+Shift+K (cambiado por seguridad)
+      // Atajos
       document.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.key === 'q') {
-          e.preventDefault(); guardarRegistro();
-        }
-        if (e.ctrlKey && e.shiftKey && e.key === 'k') {
+        if (e.ctrlKey && e.key === 'q') { e.preventDefault(); guardar(); }
+        if (e.altKey && e.key === 'l') {
           e.preventDefault();
-          const activo = document.activeElement;
-          if (activo && activo.id) {
-            const lock = document.getElementById(`lock_${activo.id}`);
-            if (lock) lock.checked = !lock.checked;
+          const active = document.activeElement;
+          if (active && ['INPUT','TEXTAREA','SELECT'].includes(active.tagName)) {
+            const isLocked = active.classList.contains('locked');
+            active.classList.toggle('locked', !isLocked);
+            console.log(`Campo ${active.id} ${isLocked ? 'desbloqueado' : 'bloqueado'}`);
           }
         }
       });
