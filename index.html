@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Captura de Portadas</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Formulario de Captura de Portadas</h1>
+    <form id="formulario">
+      <div class="form-row">
+        <div class="form-col">
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" name="fecha" required>
+        </div>
+        <div class="form-col">
+          <label for="medio">Medio</label>
+          <input type="text" id="medio" name="medio" list="lista_medios" required>
+          <datalist id="lista_medios">
+            <!-- Aquí puedes agregar opciones predefinidas si lo deseas -->
+          </datalist>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <label for="titular">Titular</label>
+          <textarea id="titular" name="titular" rows="2" required></textarea>
+        </div>
+        <div class="form-col">
+          <label for="recurso_editorial">Recurso editorial</label>
+          <input type="text" id="recurso_editorial" name="recurso_editorial" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <label for="dependencia">Dependencia</label>
+          <input type="text" id="dependencia" name="dependencia" list="lista_dependencias">
+          <datalist id="lista_dependencias"></datalist>
+        </div>
+        <div class="form-col">
+          <label for="organismo">Organismo</label>
+          <input type="text" id="organismo" name="organismo" list="lista_organismos">
+          <datalist id="lista_organismos"></datalist>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <label for="tema">Tema</label>
+          <input type="text" id="tema" name="tema" list="lista_temas">
+          <datalist id="lista_temas"></datalist>
+        </div>
+        <div class="form-col">
+          <label for="estatus">Estatus</label>
+          <select id="estatus" name="estatus" required>
+            <option value="">-- Seleccionar --</option>
+            <option value="capturado">Capturado</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="revisado">Revisado</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('formulario').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Formulario enviado (simulado). En una versión real, conectarías a una base de datos o Google Sheets.');
+    });
+  </script>
+</body>
+</html>
