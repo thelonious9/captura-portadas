@@ -59,7 +59,7 @@
     button {
       background-color: #007bff;
       color: white;
-      padding: 10px 15px;
+      padding: 8px 12px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
@@ -81,6 +81,18 @@
     }
     th {
       background-color: #f2f2f2;
+    }
+    .btn-edit {
+      background-color: #ffc107;
+      color: #212529;
+      padding: 2px 6px;
+      font-size: 12px;
+    }
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+      padding: 2px 6px;
+      font-size: 12px;
     }
     .error {
       color: red;
@@ -150,7 +162,7 @@
         </div>
       </div>
 
-      <button type="submit" id="btnGuardar">Guardar registro (Ctrl+Q)</button>
+      <button type="button" id="btnGuardar">Guardar registro (Ctrl+Q)</button>
       <button type="button" id="btnDescargar">📥 Descargar CSV</button>
       <p><small>Atajo para bloquear: <strong>Alt + L</strong></small></p>
     </form>
@@ -159,6 +171,7 @@
     <table id="tablaRegistros">
       <thead>
         <tr>
+          <th>ID</th>
           <th>Fecha</th>
           <th>Medio</th>
           <th>Titular</th>
@@ -167,6 +180,7 @@
           <th>Organismo</th>
           <th>Tema</th>
           <th>Estatus</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody id="cuerpoTabla"></tbody>
@@ -177,20 +191,16 @@
     let registros = JSON.parse(localStorage.getItem('registrosPortadas')) || [];
     let dependenciasData = [];
     let opciones = { medios: [], recursos: [], dependencias: [], temas: [], estatus: [] };
+    let editandoId = null; // Para saber si estamos editando
 
     async function loadCSV(filename) {
       try {
-        const response = await fetch(filename + '?t=' + Date.now()); // evitar caché
+        const response = await fetch(filename + '?t=' + Date.now());
         if (!response.ok) throw new Error(`${filename} no encontrado`);
         const text = await response.text();
         const lines = text.trim().split('\n');
         if (lines.length < 2) throw new Error(`${filename} está vacío`);
-        const headers = lines[0].split(',').map(h => h.trim());
-        const key = headers[0];
-        return lines.slice(1).map(line => {
-          const values = line.split(',').map(v => v.trim());
-          return values[0] || '';
-        }).filter(v => v);
+        return lines.slice(1).map(line => line.split(',').map(v => v.trim())[0]).filter(v => v);
       } catch (err) {
         console.error(err);
         return [];
@@ -262,7 +272,7 @@
       });
     }
 
-    function guardar() {
+    function guardarRegistro() {
       const campos = ['fecha','medio','titular','recurso','dependencia','organismo','tema','estatus'];
       const nuevo = {};
       for (let c of campos) {
@@ -273,33 +283,89 @@
         }
         nuevo[c] = el.value.trim();
       }
-      registros.push(nuevo);
+
+      if (editandoId !== null) {
+        // Actualizar registro existente
+        registros[editandoId] = nuevo;
+        editandoId = null;
+      } else {
+        // Nuevo registro
+        nuevo.id = registros.length + 1; // ID único
+        registros.push(nuevo);
+      }
+
       localStorage.setItem('registrosPortadas', JSON.stringify(registros));
       actualizarTabla();
-      // Limpiar (sin bloqueo por ahora)
-      for (let c of ['fecha','medio','recurso','dependencia','tema','estatus']) {
-        document.getElementById(c + (c === 'estatus' ? '' : '')).value = '';
-      }
-      document.getElementById('titular').value = '';
-      document.getElementById('organismo').innerHTML = '<option value="">-- Seleccionar dependencia primero --</option>';
+      limpiarFormulario();
       document.getElementById('titular').focus();
+    }
+
+    function limpiarFormulario() {
+      const campos = ['fecha','medio','titular','recurso','dependencia','tema','estatus'];
+      campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = '';
+      });
+      document.getElementById('organismo').innerHTML = '<option value="">-- Seleccionar dependencia primero --</option>';
+    }
+
+    function editarRegistro(id) {
+      const reg = registros[id];
+      editandoId = id;
+      Object.keys(reg).forEach(key => {
+        if (key !== 'id') {
+          const el = document.getElementById(key);
+          if (el) el.value = reg[key];
+        }
+      });
+      // Actualizar organismo si hay dependencia
+      if (reg.dependencia) {
+        updateOrganismo(reg.dependencia);
+        document.getElementById('organismo').value = reg.organismo;
+      }
+      document.getElementById('titular').focus();
+    }
+
+    function eliminarRegistro(id) {
+      if (confirm('¿Estás seguro de eliminar este registro?')) {
+        registros.splice(id, 1);
+        // Reajustar IDs
+        registros.forEach((r, i) => r.id = i + 1);
+        localStorage.setItem('registrosPortadas', JSON.stringify(registros));
+        actualizarTabla();
+      }
     }
 
     function actualizarTabla() {
       const tbody = document.getElementById('cuerpoTabla');
       tbody.innerHTML = '';
-      registros.forEach(r => {
+      registros.forEach((r, idx) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.fecha}</td><td>${r.medio}</td><td>${r.titular}</td><td>${r.recurso}</td><td>${r.dependencia}</td><td>${r.organismo}</td><td>${r.tema}</td><td>${r.estatus}</td>`;
+        tr.innerHTML = `
+          <td>${r.id}</td>
+          <td>${r.fecha}</td>
+          <td>${r.medio}</td>
+          <td>${r.titular}</td>
+          <td>${r.recurso}</td>
+          <td>${r.dependencia}</td>
+          <td>${r.organismo}</td>
+          <td>${r.tema}</td>
+          <td>${r.estatus}</td>
+          <td>
+            <button class="btn-edit" onclick="editarRegistro(${idx})">✏️</button>
+            <button class="btn-delete" onclick="eliminarRegistro(${idx})">🗑️</button>
+          </td>
+        `;
         tbody.appendChild(tr);
       });
     }
 
     function descargarCSV() {
       if (!registros.length) return alert('No hay registros.');
-      let csv = 'Fecha,Medio,Titular,Recurso editorial,Dependencia,Organismo,Tema,Estatus\n';
+      let csv = 'ID,Fecha,Medio,Titular,Recurso editorial,Dependencia,Organismo,Tema,Estatus\n';
       csv += registros.map(r =>
-        `"${r.fecha}","${r.medio}","${r.titular}","${r.recurso}","${r.dependencia}","${r.organismo}","${r.tema}","${r.estatus}"`
+        `"${r.id}","${r.fecha}","${r.medio}","${r.titular}","${r.recurso}","${r.dependencia}","${r.organismo}","${r.tema}","${r.estatus}"`
       ).join('\n');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'}));
@@ -356,25 +422,27 @@
       });
 
       // Eventos
-      document.getElementById('formulario').addEventListener('submit', e => { e.preventDefault(); guardar(); });
+      document.getElementById('btnGuardar').addEventListener('click', guardarRegistro);
       document.getElementById('btnDescargar').addEventListener('click', descargarCSV);
 
       // Atajos
       document.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.key === 'q') { e.preventDefault(); guardar(); }
+        if (e.ctrlKey && e.key === 'q') { e.preventDefault(); guardarRegistro(); }
         if (e.altKey && e.key === 'l') {
           e.preventDefault();
           const active = document.activeElement;
           if (active && ['INPUT','TEXTAREA','SELECT'].includes(active.tagName)) {
-            const isLocked = active.classList.contains('locked');
-            active.classList.toggle('locked', !isLocked);
-            console.log(`Campo ${active.id} ${isLocked ? 'desbloqueado' : 'bloqueado'}`);
+            active.classList.toggle('locked');
           }
         }
       });
 
       actualizarTabla();
     });
+
+    // Hacer funciones globales para botones
+    window.editarRegistro = editarRegistro;
+    window.eliminarRegistro = eliminarRegistro;
   </script>
 </body>
 </html>
