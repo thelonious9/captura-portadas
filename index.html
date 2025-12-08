@@ -552,7 +552,7 @@
   <h2>Registros Capturados</h2>
   
   <p id="errorCargaCSV" class="error-carga" style="display: none;">
-      🚨 Error al cargar los archivos CSV requeridos. Por favor, asegúrese de que estén accesibles.
+      🚨 Error al cargar los archivos CSV requeridos. Por favor, asegúrese de que estén accesibles y que esté ejecutando el archivo **en un servidor web local (ej. Live Server)** para evitar problemas de seguridad (CORS).
   </p>
 
   <table id="tablaNotas">
@@ -585,13 +585,12 @@
     // 🟢 CONFIGURACIÓN DE URLS CSV (ACTUALIZADAS Y VERIFICADAS) 🟢
     // ======================================================================
     const urls = {
-        // --- URLs de GitHub (Verificadas) ---
+        // --- URLs de GitHub (Verificadas en formato RAW) ---
         dependencias: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Dependencia.csv",
         recursos: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Recursos.csv",
         
         // --- URLs que se mantienen (Debe estar localmente junto al HTML) ---
         medios: "./Medio.csv",
-        // generos: "./Genero.csv", // ELIMINADO
         estatus: "./Estatus.csv",
         temas: "./Tema.csv",
         firmas: "./Firma.csv"
@@ -617,8 +616,6 @@
         'firma', 
         'dependencia', 
         'organismo', 
-        // 'genero', // ELIMINADO
-        // 'canal', // ELIMINADO
         'tema', 
         'estatus', 
     ];
@@ -634,8 +631,6 @@
         'firma': 'Firma', 
         'dependencia': 'Dependencia', 
         'organismo': 'Organismo', 
-        // 'genero': 'Género', // ELIMINADO
-        // 'canal': 'Canal', // ELIMINADO
         'tema': 'Tema', 
         'estatus': 'Estatus', 
     };
@@ -649,7 +644,6 @@
     // --- Mapas para dependencias ---
     let orgMap = {};
     let firmaMap = {};
-    // let medioToCanalMap = {}; // ELIMINADO
 
     // ======================================================================
     // ---------------------- FUNCIONES AUXILIARES CSV ----------------------
@@ -668,27 +662,32 @@
 
     async function cargarCSV(url) {
         try {
+            // Se añade un timestamp para archivos locales para evitar cache (solo si no es GitHub)
             const urlConCache = url.includes('github') ? url : url + '?t=' + Date.now();
             const response = await fetch(urlConCache);
             if (!response.ok) {
                 console.error(`Error al cargar el archivo ${url}: ${response.statusText}`);
                 document.getElementById("errorCargaCSV").style.display = 'block';
-                return [];
+                // Lanzar error para que la carga de inicialización falle y no continúe con datos vacíos
+                throw new Error(`Fallo en la carga del CSV: ${url}`); 
             }
             const text = await response.text();
             return text;
         } catch (error) {
             console.error(`Error de red al cargar el archivo ${url}:`, error);
             document.getElementById("errorCargaCSV").style.display = 'block';
-            return [];
+            throw error; // Propagar el error para detener la inicialización
         }
     }
 
     function limpiarFilasCSV(csvText) {
+        // Manejo básico de CSV, asumiendo un formato limpio y delimitado por comas.
         const lines = csvText.trim().split('\n').filter(l => l.trim());
         if (lines.length < 1) return [];
         // Ignorar la primera fila (encabezados)
         return lines.slice(1).map(line => {
+            // Intenta manejar comas dentro de comillas (no robusto, pero mejor que nada)
+            // Se asume que el CSV está relativamente limpio y sin saltos de línea complejos.
             return line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
         });
     }
@@ -727,7 +726,12 @@
         campo.dataset.lista = JSON.stringify(lista);
         let indice = -1;
 
-        campo.addEventListener("input", () => {
+        // Limpiar eventos anteriores si se llama de nuevo (ej. Dependencia cambia)
+        // Nota: En un entorno de producción, sería mejor usar removeEventListener
+        // pero por simplicidad en un único archivo HTML, re-asignar los listeners es viable.
+
+        // 1. Manejo de 'input'
+        const handleInput = () => {
             const valor = campo.value.toLowerCase().trim();
             contenedor.innerHTML = "";
             indice = -1;
@@ -743,24 +747,26 @@
                     campo.value = s;
                     contenedor.innerHTML = "";
                     if (callback) callback(s);
-                    // Asegura que se dispare el evento 'blur' después de seleccionar
                     campo.dispatchEvent(new Event('blur')); 
                 };
                 contenedor.appendChild(div);
             });
-        });
+        };
+        campo.oninput = handleInput;
 
-        campo.addEventListener("keydown", e => {
+
+        // 2. Manejo de 'keydown' (Flechas y Enter)
+        const handleKeydown = e => {
             const items = contenedor.querySelectorAll(".sugerencia");
 
-            // --- LÓGICA: SELECCIÓN ÚNICA CON ENTER O TAB --- 
+            if (items.length === 0) return;
+
+            // Lógica: Selección ÚNICA con ENTER o TAB (si solo hay 1)
             if (items.length === 1 && (e.key === "Enter" || e.key === "Tab")) {
                 e.preventDefault(); 
                 items[0].click(); 
                 return;
             }
-
-            if (items.length === 0) return;
 
             if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -778,18 +784,24 @@
                     items[indice].click(); 
                 }
             }
-        });
-
-        campo.addEventListener("focus", () => {
-            // Cierra otras sugerencias
+        };
+        campo.onkeydown = handleKeydown;
+        
+        // 3. Manejo de 'focus' y 'blur'
+        campo.onfocus = () => {
+             // Cierra otras sugerencias
             document.querySelectorAll('.sugerencias').forEach(sug => {
                 if (sug.id !== idSugerencias) {
                     sug.innerHTML = "";
                 }
             });
-        });
+            // Si el campo está vacío, dispara el input para mostrar todas
+            if (campo.value.trim() === '') {
+                 handleInput();
+            }
+        };
 
-        campo.addEventListener("blur", () => {
+        campo.onblur = () => {
             // Cierra sugerencias con un ligero retardo para permitir clics
             setTimeout(() => {
                 if (!contenedor.contains(document.activeElement)) {
@@ -800,13 +812,14 @@
                     const match = lista.find(item => item.toLowerCase() === campo.value.toLowerCase());
                     if (match) {
                         callback(match);
-                    } else if (idCampo === 'dependencia' || idCampo === 'medio') {
-                        // Si no hay match para Dependencia o Medio, se limpia el campo dependiente
+                    } else if (idCampo === 'dependencia') {
+                        // Si no hay match para Dependencia, limpia Organismo
                         callback(null);
                     }
+                     // Nota: El callback para 'Medio' ya maneja la firma dentro del init.
                 }
             }, 150);
-        });
+        };
 
         function resaltar(items, i) {
             items.forEach(el => el.classList.remove("resaltado"));
@@ -815,7 +828,7 @@
     }
 
     // Función para actualizar la lista de Firmas según el Medio
-    function setFirmasFromMedio(medio, firmaMap) {
+    function setFirmasFromMedio(medio) {
         const firmasLista = firmaMap[medio] || [];
         // Actualiza la lista de autocompletado para Firma
         autocompletar("firma", "sugFirma", firmasLista);
@@ -826,6 +839,14 @@
         document.getElementById('organismo').value = '';
         localStorage.removeItem('organismo');
         autocompletar("organismo", "sugOrg", []);
+    }
+    
+    // Función para actualizar la lista de Organismos según la Dependencia
+    function updateOrganismo(dependencia) {
+        const orgs = orgMap[dependencia] || [];
+        autocompletar("organismo", "sugOrg", orgs);
+        document.getElementById('organismo').value = ''; 
+        localStorage.removeItem('organismo');
     }
 
 
@@ -944,13 +965,13 @@
         // Restaurar el valor por defecto de Dependencia para no bloqueados
         const depInput = document.getElementById('dependencia');
         if (localStorage.getItem('bloqueado_dependencia') !== 'true') {
-            autocompletar("organismo", "sugOrg", orgMap[depInput.value] || []);
+            updateOrganismo(depInput.value);
         }
         
         // Restaurar el valor por defecto de Firma para no bloqueados
         const medioInput = document.getElementById('medio');
         if (localStorage.getItem('bloqueado_medio') !== 'true') {
-            setFirmasFromMedio(medioInput.value, firmaMap);
+            setFirmasFromMedio(medioInput.value);
         }
 
         document.getElementById('usuario').focus(); // Vuelve al inicio del formulario
@@ -1099,8 +1120,8 @@
         const dependencia = nota.dependencia;
         const medio = nota.medio;
 
-        autocompletar("organismo", "sugOrg", orgMap[dependencia] || []);
-        autocompletar("firma", "sugFirma", firmaMap[medio] || []);
+        updateOrganismo(dependencia);
+        setFirmasFromMedio(medio);
         
         // Marcar la fila como editada
         tr.classList.add('editando');
@@ -1321,6 +1342,45 @@
     function filtrarTabla() {
         renderizarTabla(); 
     }
+    
+    // Función para mostrar/ocultar el contenedor de sugerencias al hacer clic en el botón
+    function mostrarSugerencias(idCampo, idSugerencias) {
+        const campo = document.getElementById(idCampo);
+        const contenedor = document.getElementById(idSugerencias);
+        const lista = JSON.parse(campo.dataset.lista || '[]');
+        
+        if (contenedor.innerHTML.trim() !== '') {
+            contenedor.innerHTML = '';
+            return;
+        }
+
+        // Cierra otras sugerencias
+        document.querySelectorAll('.sugerencias').forEach(sug => {
+            if (sug.id !== idSugerencias) {
+                sug.innerHTML = "";
+            }
+        });
+        
+        // Generar sugerencias (muestra todas si el campo está vacío)
+        const valor = campo.value.toLowerCase().trim();
+        const sugerencias = lista.filter(item => !valor || item.toLowerCase().includes(valor));
+
+        sugerencias.forEach((s, i) => {
+            const div = document.createElement("div");
+            div.textContent = s;
+            div.className = "sugerencia";
+            div.dataset.index = i;
+            div.onclick = () => {
+                campo.value = s;
+                contenedor.innerHTML = "";
+                // Dispara el input para que se ejecute la lógica de autocompletar si existe
+                campo.dispatchEvent(new Event('input')); 
+                campo.dispatchEvent(new Event('blur')); 
+            };
+            contenedor.appendChild(div);
+        });
+    }
+
 
     // ======================================================================
     // --------------------------- INICIALIZACIÓN ---------------------------
@@ -1329,14 +1389,17 @@
     document.addEventListener("DOMContentLoaded", async () => {
         // --- Carga de Mapas y Listas ---
         try {
-            // 1. Dependencia -> Organismo (USA EL NUEVO ARCHIVO DE GITHUB)
+            // 1. Dependencia -> Organismo (USA EL ARCHIVO DE GITHUB)
             const depData = await cargarMapa(urls.dependencias);
             orgMap = depData.map;
-            autocompletar("dependencia", "sugDep", depData.claves, dep => {
-                // Al cambiar dependencia, se actualiza organismo
-                autocompletar("organismo", "sugOrg", orgMap[dep] || []);
-                document.getElementById('organismo').value = ''; // Limpia el organismo anterior
-                localStorage.removeItem('organismo');
+            // Configuración del autocompletado de Dependencia con su callback
+            autocompletar("dependencia", "sugDep", depData.claves, dependenciaSeleccionada => {
+                // Si la dependencia es válida, actualiza Organismo, sino, lo limpia
+                if (dependenciaSeleccionada) {
+                    updateOrganismo(dependenciaSeleccionada);
+                } else {
+                    limpiarOrganismo();
+                }
             });
 
             // 2. Firma -> (USA ARCHIVO LOCAL)
@@ -1345,22 +1408,25 @@
             
             // 3. Medio -> Firma (interdependientes)
             const medioData = await cargarMapa(urls.medios);
-            autocompletar("medio", "sugMedio", medioData.claves, medio => {
+            autocompletar("medio", "sugMedio", medioData.claves, medioSeleccionado => {
                 // Actualiza la lista de Firmas
-                setFirmasFromMedio(medio, firmaMap);
+                setFirmasFromMedio(medioSeleccionado);
             });
             
-            // Inicialización de autocompletados dependientes
-            autocompletar("organismo", "sugOrg", []);
-            autocompletar("firma", "sugFirma", []);
+            // Inicialización de autocompletados dependientes y simples
+            autocompletar("organismo", "sugOrg", []); // Lista de Organismo inicialmente vacía
+            autocompletar("firma", "sugFirma", []); // Lista de Firma inicialmente vacía
             
             // 4. Carga de listas simples (Estatus, Tema, RECURSO EDITORIAL)
             autocompletar("estatus", "sugEstatus", await cargarLista(urls.estatus));
             autocompletar("tema", "sugTema", await cargarLista(urls.temas));
             autocompletar("recurso", "sugRecurso", await cargarLista(urls.recursos)); 
 
+            // Oculta el mensaje de error si todo se cargó correctamente
+            document.getElementById("errorCargaCSV").style.display = 'none';
+
         } catch (error) {
-            console.error("Error grave en la inicialización:", error);
+            console.error("Error grave en la inicialización (CSV no cargados):", error);
             // El mensaje de error ya se muestra dentro de cargarCSV
         }
 
@@ -1370,11 +1436,6 @@
         // Persistence & Locks
         camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(id => {
             const campo = document.getElementById(id);
-            // Carga el valor persistente (si no está bloqueado)
-            if (localStorage.getItem(id)) {
-                campo.value = localStorage.getItem(id);
-            }
-
             // Carga el estado de bloqueo
             const isBloqueado = localStorage.getItem(`bloqueado_${id}`) === 'true';
             if (isBloqueado) {
@@ -1385,6 +1446,18 @@
                         alternarBloqueo(id); // Aplica la clase y el readonly
                 }
             }
+            // Carga el valor persistente (si no está bloqueado)
+            if (localStorage.getItem(id)) {
+                campo.value = localStorage.getItem(id);
+                // Si Dependencia/Medio estaban bloqueados, hay que cargar sus dependientes al inicio
+                if (id === 'dependencia' && isBloqueado) {
+                    updateOrganismo(campo.value);
+                }
+                if (id === 'medio' && isBloqueado) {
+                    setFirmasFromMedio(campo.value);
+                }
+            }
+            
             
             // Event Listener para persistencia de valor (si no está bloqueado)
             campo.addEventListener("input", () => {
@@ -1401,21 +1474,13 @@
                 const contenedorSugerencias = e.target.parentNode.querySelector('.sugerencias');
                 const items = contenedorSugerencias ? contenedorSugerencias.querySelectorAll('.sugerencia') : [];
                 
-                // Si no hay sugerencias visibles, o si el campo no es de sugerencia, se permite el submit
-                if (items.length === 0) {
-                    // Permite que el navegador haga el submit
+                // Si hay sugerencias visibles, previene el submit
+                if (items.length > 0) {
+                    e.preventDefault(); 
                     return;
                 }
                 
-                // Si hay más de una sugerencia, o está en foco y es un campo con botón de sugerencia,
-                // previene el submit y simula un Tab para mover el foco.
-                e.preventDefault(); 
-                const formElements = Array.from(document.querySelectorAll('form *')).filter(
-                    el => ['INPUT', 'BUTTON', 'TEXTAREA'].includes(el.tagName) && !el.disabled && !el.readOnly && el.type !== 'hidden'
-                );
-                const currentIndex = formElements.indexOf(e.target);
-                const nextIndex = (currentIndex + 1) % formElements.length;
-                formElements[nextIndex].focus();
+                // Si no hay sugerencias, permite el submit (que será capturado por el listener de guardarNota)
             }
         });
 
