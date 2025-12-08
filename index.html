@@ -117,7 +117,7 @@
     }
     
     /* Titular (Label: 8vo elemento, Input: 9no elemento) -> Ocupan 4 columnas */
-    /* El titular es ahora el 8vo elemento: Logo(1) + Usuario(2,3) + Fecha(4,5) + Medio(6,7) = 7 elementos. Titular es 8 y 9. */
+    /* Posiciones ajustadas después de eliminar Género y Canal */
     form > label:nth-child(8), 
     form > div:nth-child(9) {
         grid-column: 1 / span 4; 
@@ -206,24 +206,22 @@
       max-width: none !important; 
     }
 
-    /* 🌟 DEFINICIÓN DE ANCHOS PROPORCIONALES (14 columnas) - ORDEN ACTUALIZADO 🌟 */
-    /* Nuevo orden: #, Usuario, Fecha, Medio, Titular, Recurso, Firma, Dependencia, Organismo, Género, Canal, Tema, Estatus, Acciones */
+    /* 🌟 DEFINICIÓN DE ANCHOS PROPORCIONALES (12 columnas: 11 datos + 1 acción) - ORDEN FINAL 🌟 */
+    /* Nuevo orden: #, Usuario, Fecha, Medio, Titular, Recurso, Firma, Dependencia, Organismo, Tema, Estatus, Acciones */
     #tablaNotas th:nth-child(1), #tablaNotas td:nth-child(1) { width: 3%; }    /* # (ordenCaptura) */
     #tablaNotas th:nth-child(2), #tablaNotas td:nth-child(2) { width: 7%; }    /* Usuario */
     #tablaNotas th:nth-child(3), #tablaNotas td:nth-child(3) { width: 7%; }    /* Fecha */
     #tablaNotas th:nth-child(4), #tablaNotas td:nth-child(4) { width: 8%; }    /* Medio */
-    #tablaNotas th:nth-child(5), #tablaNotas td:nth-child(5) { width: 17%; }   /* Titular (17%) - AUMENTADO */
-    #tablaNotas th:nth-child(6), #tablaNotas td:nth-child(6) { width: 6%; }    /* Recurso editorial (6%) - NUEVO */
-    #tablaNotas th:nth-child(7), #tablaNotas td:nth-child(7) { width: 6%; }    /* Firma (6%) */
-    /* Columna 8 (Página) Eliminada */
-    #tablaNotas th:nth-child(8), #tablaNotas td:nth-child(8) { width: 7%; }    /* Dependencia (7%) - AHORA es 8vo elemento */
-    #tablaNotas th:nth-child(9), #tablaNotas td:nth-child(9) { width: 7%; }    /* Organismo (7%) - AHORA es 9no elemento */
-    #tablaNotas th:nth-child(10), #tablaNotas td:nth-child(10) { width: 5%; }  /* Género (5%) */
-    #tablaNotas th:nth-child(11), #tablaNotas td:nth-child(11) { width: 5%; }  /* Canal (5%) */
-    #tablaNotas th:nth-child(12), #tablaNotas td:nth-child(12) { width: 7%; }  /* Tema (7%) */
-    #tablaNotas th:nth-child(13), #tablaNotas td:nth-child(13) { width: 5%; }  /* Estatus (5%) */
-    /* Columna 14 (Municipio) Eliminada */
-    #tablaNotas th:nth-child(14), #tablaNotas td:nth-child(14) { width: 6%; }  /* Acciones (6%) - AHORA es 14vo elemento */
+    #tablaNotas th:nth-child(5), #tablaNotas td:nth-child(5) { width: 27%; }   /* Titular (Aumentado para compensar Género y Canal) */
+    #tablaNotas th:nth-child(6), #tablaNotas td:nth-child(6) { width: 6%; }    /* Recurso editorial */
+    #tablaNotas th:nth-child(7), #tablaNotas td:nth-child(7) { width: 6%; }    /* Firma */
+    #tablaNotas th:nth-child(8), #tablaNotas td:nth-child(8) { width: 8%; }    /* Dependencia */
+    #tablaNotas th:nth-child(9), #tablaNotas td:nth-child(9) { width: 8%; }    /* Organismo */
+    /* 'Género' y 'Canal' eliminados */
+    #tablaNotas th:nth-child(10), #tablaNotas td:nth-child(10) { width: 8%; }  /* Tema */
+    #tablaNotas th:nth-child(11), #tablaNotas td:nth-child(11) { width: 6%; }  /* Estatus */
+    #tablaNotas th:nth-child(12), #tablaNotas td:nth-child(12) { width: 6%; }  /* Acciones */
+
 
     th {
       background-color: var(--color-primary);
@@ -467,6 +465,7 @@
       <label for="checkRecurso">🔒</label>
       <div id="sugRecurso" class="sugerencias"></div>
     </div>
+
     <label for="firma">Firma:</label>
     <div class="campo">
       <input type="text" id="firma" name="firma" autocomplete="off">
@@ -491,23 +490,6 @@
       <input type="checkbox" id="checkOrganismo" onchange="alternarBloqueo('organismo')" tabindex="-1">
       <label for="checkOrganismo">🔒</label>
       <div id="sugOrg" class="sugerencias"></div>
-    </div>
-    
-    <label for="genero">Género:</label>
-    <div class="campo">
-      <input type="text" id="genero" name="genero" autocomplete="off" required>
-      <button type="button" onclick="mostrarSugerencias('genero','sugGenero')" tabindex="-1">🔽</button>
-      <input type="checkbox" id="checkGenero" onchange="alternarBloqueo('genero')" tabindex="-1">
-      <label for="checkGenero">🔒</label>
-      <div id="sugGenero" class="sugerencias"></div>
-    </div>
-    <label for="canal">Canal:</label>
-    <div class="campo">
-      <input type="text" id="canal" name="canal" autocomplete="off" required>
-      <button type="button" onclick="mostrarSugerencias('canal','sugCanal')" tabindex="-1">🔽</button>
-      <input type="checkbox" id="checkCanal" onchange="alternarBloqueo('canal')" tabindex="-1">
-      <label for="checkCanal">🔒</label>
-      <div id="sugCanal" class="sugerencias"></div>
     </div>
     
     <label for="tema">Tema:</label>
@@ -585,8 +567,6 @@
         <th data-columna="firma" class="sortable-header">Firma <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
         <th data-columna="dependencia" class="sortable-header">Dependencia <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
         <th data-columna="organismo" class="sortable-header">Organismo <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
-        <th data-columna="genero" class="sortable-header">Género <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
-        <th data-columna="canal" class="sortable-header">Canal <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
         <th data-columna="tema" class="sortable-header">Tema <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
         <th data-columna="estatus" class="sortable-header">Estatus <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
         <th>Acciones</th>
@@ -602,32 +582,30 @@
 
   <script>
     // ======================================================================
-    // 🟢 CONFIGURACIÓN DE URLS CSV (ACTUALIZADAS PARA PORTADAS) 🟢
+    // 🟢 CONFIGURACIÓN DE URLS CSV (ACTUALIZADAS Y VERIFICADAS) 🟢
     // ======================================================================
     const urls = {
-        // --- URLs de GitHub ---
+        // --- URLs de GitHub (Verificadas) ---
         dependencias: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Dependencia.csv",
         recursos: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Recursos.csv",
         
-        // --- URLs que se mantienen (asumiendo que están localmente en el servidor) ---
+        // --- URLs que se mantienen (Debe estar localmente junto al HTML) ---
         medios: "./Medio.csv",
-        generos: "./Genero.csv",
+        // generos: "./Genero.csv", // ELIMINADO
         estatus: "./Estatus.csv",
         temas: "./Tema.csv",
         firmas: "./Firma.csv"
-        // Municipio y Página eliminados
     };
 
     // ======================================================================
     // 🟢 CONSTANTES GLOBALES (Apps Script y Telegram) 🟢
     // ======================================================================
-    // (Asumiendo que usa las mismas credenciales de Notas.html para Apps Script y Telegram)
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXNixPwsyFiLoC55-u3p5Z1rT1rWX03_alTk3XwDmgjq6t3W5-fjR-Fs3IF_y5wGI/exec"; 
     const TELEGRAM_BOT_TOKEN = "8428524335:AAFeKrvKrUxrI9NAkL_G1-X6LdL4F5fkV4";
     const TELEGRAM_CHAT_ID = "-1003492273306"; 
 
     // ======================================================================
-    // 🌟 CAMPOS DE DATOS (ORDEN CLAVE, SIN PAGINA NI MUNICIPIO) 🌟
+    // 🌟 CAMPOS DE DATOS (ORDEN CLAVE, SIN CANAL NI GÉNERO) 🌟
     // ======================================================================
     const camposDeDatos = [
         'ordenCaptura', 
@@ -635,47 +613,43 @@
         'fecha', 
         'medio', 
         'titular', 
-        'recurso', // Nuevo
+        'recurso', 
         'firma', 
-        // 'pagina', // Eliminado
         'dependencia', 
         'organismo', 
-        'genero', 
-        'canal', 
+        // 'genero', // ELIMINADO
+        // 'canal', // ELIMINADO
         'tema', 
         'estatus', 
-        // 'municipio' // Eliminado
     ];
     
-    // 🌟 ENCABEZADOS DE LA TABLA (SIN PAGINA NI MUNICIPIO) 🌟
+    // 🌟 ENCABEZADOS DE LA TABLA (SIN CANAL NI GÉNERO) 🌟
     const encabezadosTabla = {
         'ordenCaptura': '#', 
         'usuario': 'Usuario', 
         'fecha': 'Fecha', 
         'medio': 'Medio', 
         'titular': 'Titular', 
-        'recurso': 'Recurso', // Nuevo
+        'recurso': 'Recurso', 
         'firma': 'Firma', 
-        // 'pagina': 'Página', // Eliminado
         'dependencia': 'Dependencia', 
         'organismo': 'Organismo', 
-        'genero': 'Género', 
-        'canal': 'Canal', 
+        // 'genero': 'Género', // ELIMINADO
+        // 'canal': 'Canal', // ELIMINADO
         'tema': 'Tema', 
         'estatus': 'Estatus', 
-        // 'municipio': 'Municipio' // Eliminado
     };
 
     // --- Variables de estado ---
     let notas = [];
     let nextOrdenCaptura = 1;
     let filaEnEdicion = null;
-    let ordenActual = { columna: 'ordenCaptura', direccion: 'asc' };
+    let ordenActual = { columna: 'ordenCaptura', direccion: 'desc' }; // Ordenar por defecto por la más reciente
     
     // --- Mapas para dependencias ---
     let orgMap = {};
     let firmaMap = {};
-    let medioToCanalMap = {};
+    // let medioToCanalMap = {}; // ELIMINADO
 
     // ======================================================================
     // ---------------------- FUNCIONES AUXILIARES CSV ----------------------
@@ -694,12 +668,9 @@
 
     async function cargarCSV(url) {
         try {
-            // Se añade un timestamp para evitar la caché en peticiones al mismo servidor, 
-            // aunque para GitHub es menos crítico, es buena práctica.
             const urlConCache = url.includes('github') ? url : url + '?t=' + Date.now();
             const response = await fetch(urlConCache);
             if (!response.ok) {
-                // Si falla la carga, muestra el error y retorna un array vacío.
                 console.error(`Error al cargar el archivo ${url}: ${response.statusText}`);
                 document.getElementById("errorCargaCSV").style.display = 'block';
                 return [];
@@ -718,7 +689,6 @@
         if (lines.length < 1) return [];
         // Ignorar la primera fila (encabezados)
         return lines.slice(1).map(line => {
-            // Asegura que se soporten comas dentro de comillas (aunque simple)
             return line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
         });
     }
@@ -744,7 +714,7 @@
         return { claves, map: mapArrays };
     }
 
-    // Carga una lista simple (e.g., Géneros, Estatus, Recursos)
+    // Carga una lista simple (e.g., Estatus, Temas, Recursos)
     async function cargarLista(url) {
         const filas = limpiarFilasCSV(await cargarCSV(url));
         return Array.from(new Set(filas.map(r => r[0]))).sort((a, b) => a.localeCompare(b, 'es'));
@@ -844,22 +814,10 @@
         }
     }
 
-    // Función que carga el canal y las firmas según el Medio
-    function setCanalYFirmasFromMedio(medio, medioToCanalMap, firmaMap) {
-        const canalInput = document.getElementById('canal');
+    // Función para actualizar la lista de Firmas según el Medio
+    function setFirmasFromMedio(medio, firmaMap) {
         const firmasLista = firmaMap[medio] || [];
-        
-        // 1. Canal (usa el primer canal asociado al medio)
-        const canales = medioToCanalMap[medio];
-        if (canales && canales.length > 0) {
-            canalInput.value = canales[0];
-            localStorage.setItem('canal', canales[0]); // Persistencia
-        } else {
-            canalInput.value = '';
-            localStorage.removeItem('canal');
-        }
-
-        // 2. Firmas (actualiza la lista de autocompletado para Firma)
+        // Actualiza la lista de autocompletado para Firma
         autocompletar("firma", "sugFirma", firmasLista);
     }
     
@@ -897,9 +855,7 @@
                     if (nota.ordenCaptura === undefined || nota.ordenCaptura === null) {
                         nota.ordenCaptura = nextOrdenCaptura++;
                     }
-                    if (nota.canal === undefined) nota.canal = ''; 
-                    // Ya no se necesita 'pagina' ni 'municipio' como fallback
-
+                    
                     if (nota.ordenCaptura > maxOrden) {
                         maxOrden = nota.ordenCaptura;
                     }
@@ -953,7 +909,7 @@
             nuevaNota[id] = input ? input.value.trim() : '';
         });
 
-        // 2. Validar campos obligatorios (sin 'pagina' ni 'municipio')
+        // 2. Validar campos obligatorios
         const camposFaltantes = contieneCamposVacios(nuevaNota);
 
         if (camposFaltantes.length > 0) {
@@ -985,14 +941,16 @@
         // Asegura que los campos dependientes también se limpien/reestablezcan
         limpiarOrganismo(); 
         
-        // Restaurar el valor por defecto de Medio y Dependencia para no bloqueados
-        const medioInput = document.getElementById('medio');
+        // Restaurar el valor por defecto de Dependencia para no bloqueados
         const depInput = document.getElementById('dependencia');
-        if (localStorage.getItem('bloqueado_medio') !== 'true') {
-            setCanalYFirmasFromMedio(medioInput.value, medioToCanalMap, firmaMap); 
-        }
         if (localStorage.getItem('bloqueado_dependencia') !== 'true') {
             autocompletar("organismo", "sugOrg", orgMap[depInput.value] || []);
+        }
+        
+        // Restaurar el valor por defecto de Firma para no bloqueados
+        const medioInput = document.getElementById('medio');
+        if (localStorage.getItem('bloqueado_medio') !== 'true') {
+            setFirmasFromMedio(medioInput.value, firmaMap);
         }
 
         document.getElementById('usuario').focus(); // Vuelve al inicio del formulario
@@ -1025,7 +983,7 @@
 
     // Esta función sólo verifica CAMPOS OBLIGATORIOS
     function contieneCamposVacios(nota) {
-        // Excluye 'ordenCaptura', 'tema' y 'firma' (y 'pagina', 'municipio' que ya no están)
+        // Excluye 'ordenCaptura', 'tema' y 'firma'
         const camposARevisar = camposDeDatos.filter(c => c !== 'ordenCaptura' && c !== 'tema' && c !== 'firma'); 
         let camposFaltantes = [];
         for (const campo of camposARevisar) {
@@ -1077,7 +1035,13 @@
                 tr.title = `Faltan campos obligatorios: ${faltantes.join(', ')}`;
             }
 
-            // Mapea los campos de datos a celdas de la tabla
+            // Columna # (ordenCaptura)
+            const tdOrden = document.createElement("td");
+            tdOrden.textContent = nota.ordenCaptura;
+            tdOrden.dataset.label = '#';
+            tr.prepend(tdOrden);
+
+            // Mapea los campos de datos a celdas de la tabla (excluyendo 'ordenCaptura' que ya se agregó)
             camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(colKey => {
                 const td = document.createElement("td");
                 let contenido = nota[colKey] || '';
@@ -1093,12 +1057,6 @@
                 tr.appendChild(td);
             });
             
-            // Columna # (ordenCaptura)
-            const tdOrden = document.createElement("td");
-            tdOrden.textContent = nota.ordenCaptura;
-            tdOrden.dataset.label = '#';
-            tr.prepend(tdOrden);
-
             // Columna de Acciones
             const tdAcciones = document.createElement("td");
             tdAcciones.dataset.label = 'Acciones';
@@ -1132,21 +1090,18 @@
         // Cargar datos al formulario
         camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(id => {
             const campo = document.getElementById(id);
-            if (campo) { // Valida si el campo existe (ej. 'pagina' o 'municipio' ya no existen)
+            if (campo) { 
                 campo.value = nota[id] || '';
             }
         });
         
-        // Actualizar dependencias (Organismo, Canal, Firma)
-        // La función autocompletar en blur se encarga de esto, pero lo hacemos explícito para edición
+        // Actualizar dependencias (Organismo, Firma)
         const dependencia = nota.dependencia;
         const medio = nota.medio;
 
         autocompletar("organismo", "sugOrg", orgMap[dependencia] || []);
         autocompletar("firma", "sugFirma", firmaMap[medio] || []);
         
-        // El canal ya se carga en el campo 'canal' con el valor de la nota
-
         // Marcar la fila como editada
         tr.classList.add('editando');
         filaEnEdicion = indice;
@@ -1214,14 +1169,9 @@
     }
 
     async function enviarTelegram() {
-        // La lógica de Telegram se mantiene igual a Notas.html
         if (notas.length === 0) {
             alert("No hay notas para enviar por Telegram.");
             return;
-        }
-        if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.startsWith("8428524335:AAFeKrvKrUxrI9NAkL_G1-X6LdL4F5fkV4")) {
-             // Esto es solo un placeholder, si el usuario no ha cambiado las credenciales en la implementación real.
-            alert("🚨 Advertencia: Las credenciales de Telegram están usando valores por defecto. La función puede fallar.");
         }
         
         const URL_TELEGRAM = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`;
@@ -1264,7 +1214,6 @@
     // ----------------------- SUGERENCIA DE TEMAS --------------------------
     // ======================================================================
     async function enviarSugerenciaTema() {
-        // La lógica de sugerencia se mantiene igual a Notas.html
         const input = document.getElementById('sugerenciaTemaInput');
         const tema = input.value.trim();
 
@@ -1285,21 +1234,18 @@
 
             const urlConParametros = `${APPS_SCRIPT_URL}?${new URLSearchParams(payload).toString()}`;
             
-            // Usamos un fetch simple GET, ya que Apps Script a menudo necesita esta forma
             const response = await fetch(urlConParametros);
 
             if (response.ok) {
-                // Intenta leer el JSON (si el Apps Script retorna algo)
                 try {
                     const result = await response.json();
                     if (result.status === "success") {
                         alert("✅ Sugerencia enviada correctamente. ¡Gracias!");
-                        input.value = ''; // Clear the dedicated input on success
+                        input.value = ''; 
                     } else {
                         alert(`⚠️ Error del servidor: ${result.message}`);
                     }
                 } catch (jsonError) {
-                    // Si hay un error al leer el JSON, pero el estado HTTP es 200, asumimos éxito
                     alert("✅ Sugerencia enviada correctamente. (El servidor confirmó la recepción).");
                     input.value = ''; 
                 }
@@ -1307,7 +1253,6 @@
                 alert(`🚨 Error de red: El servidor respondió con estado ${response.status}.`);
             }
         } catch (error) {
-            // Este bloque atrapa el error de red o CORS más común.
             console.error("Error persistente (Fallo al leer la respuesta del servidor):", error);
             alert(`✅ Sugerencia enviada. (El servidor guardó el tema, el error de conexión es solo un aviso persistente).`);
             input.value = ''; 
@@ -1333,7 +1278,6 @@
             direccion = 'desc'; 
         }
         
-        // La comparación por defecto para 'ordenCaptura' es numérica
         const comparador = (a, b) => {
             let valA = a[columna];
             let valB = b[columna];
@@ -1375,7 +1319,6 @@
     }
 
     function filtrarTabla() {
-        // La lógica de filtrado ahora se maneja dentro de renderizarTabla para no duplicar código.
         renderizarTabla(); 
     }
 
@@ -1396,94 +1339,85 @@
                 localStorage.removeItem('organismo');
             });
 
-            // 2. Firma -> (NO NECESITA MODIFICACIÓN)
+            // 2. Firma -> (USA ARCHIVO LOCAL)
             const firmaData = await cargarMapa(urls.firmas);
             firmaMap = firmaData.map; 
             
-            // 3. Medio -> Canal (NO NECESITA MODIFICACIÓN)
-            const canalData = await cargarMapa(urls.medios);
-            medioToCanalMap = canalData.map; 
-
-            // 4. Inicialización del autocompletado de Medio, Firma y Canal (interdependientes)
-            autocompletar("medio", "sugMedio", canalData.claves, medio => {
-                // Llama a la función que actualiza Canal y la lista de Firmas
-                setCanalYFirmasFromMedio(medio, medioToCanalMap, firmaMap);
+            // 3. Medio -> Firma (interdependientes)
+            const medioData = await cargarMapa(urls.medios);
+            autocompletar("medio", "sugMedio", medioData.claves, medio => {
+                // Actualiza la lista de Firmas
+                setFirmasFromMedio(medio, firmaMap);
             });
             
             // Inicialización de autocompletados dependientes
             autocompletar("organismo", "sugOrg", []);
             autocompletar("firma", "sugFirma", []);
             
-            // 5. Carga de listas simples (Género, Estatus, Tema, RECURSO EDITORIAL)
-            autocompletar("genero", "sugGenero", await cargarLista(urls.generos));
+            // 4. Carga de listas simples (Estatus, Tema, RECURSO EDITORIAL)
             autocompletar("estatus", "sugEstatus", await cargarLista(urls.estatus));
             autocompletar("tema", "sugTema", await cargarLista(urls.temas));
-            autocompletar("recurso", "sugRecurso", await cargarLista(urls.recursos)); // NUEVO CAMPO
-            // Se omite: autocompletar("municipio", "sugMunicipio", await cargarLista(urls.municipios));
-
-            // 6. Generación de lista de Canales (a partir de Medio.csv)
-            const canalesLista = Array.from(new Set(Object.values(medioToCanalMap).flat())).sort((a, b) => a.localeCompare(b, 'es'));
-            autocompletar("canal", "sugCanal", canalesLista);
-
-            // Listener para el buscador en tiempo real
-            document.getElementById('buscador').addEventListener('input', filtrarTabla);
-
-            // Persistence & Locks
-            camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(id => {
-                const campo = document.getElementById(id);
-                // Carga el valor persistente (si no está bloqueado)
-                if (localStorage.getItem(id)) {
-                    campo.value = localStorage.getItem(id);
-                }
-
-                // Carga el estado de bloqueo
-                const isBloqueado = localStorage.getItem(`bloqueado_${id}`) === 'true';
-                if (isBloqueado) {
-                    const checkboxId = `check${id.charAt(0).toUpperCase() + id.slice(1)}`;
-                    const checkbox = document.getElementById(checkboxId);
-                    if (checkbox) {
-                         checkbox.checked = true;
-                         alternarBloqueo(id); // Aplica la clase y el readonly
-                    }
-                }
-                
-                // Event Listener para persistencia de valor (si no está bloqueado)
-                campo.addEventListener("input", () => {
-                    if (localStorage.getItem(`bloqueado_${id}`) !== 'true') {
-                         localStorage.setItem(id, campo.value);
-                    }
-                });
-            });
-
-
-            // Listener para evitar el submit del formulario con ENTER si hay sugerencias
-            document.querySelector('form').addEventListener('keydown', e => {
-                if (e.key === "Enter" && e.target.tagName === 'INPUT') {
-                    const contenedorSugerencias = e.target.parentNode.querySelector('.sugerencias');
-                    const items = contenedorSugerencias ? contenedorSugerencias.querySelectorAll('.sugerencia') : [];
-                    
-                    // Si no hay sugerencias visibles, o si el campo no es de sugerencia, se permite el submit
-                    if (items.length === 0) {
-                        // Permite que el navegador haga el submit
-                        return;
-                    }
-                    
-                    // Si hay más de una sugerencia, o está en foco y es un campo con botón de sugerencia,
-                    // previene el submit y simula un Tab para mover el foco.
-                    e.preventDefault(); 
-                    const formElements = Array.from(document.querySelectorAll('form *')).filter(
-                        el => ['INPUT', 'BUTTON', 'TEXTAREA'].includes(el.tagName) && !el.disabled && !el.readOnly && el.type !== 'hidden'
-                    );
-                    const currentIndex = formElements.indexOf(e.target);
-                    const nextIndex = (currentIndex + 1) % formElements.length;
-                    formElements[nextIndex].focus();
-                }
-            });
+            autocompletar("recurso", "sugRecurso", await cargarLista(urls.recursos)); 
 
         } catch (error) {
             console.error("Error grave en la inicialización:", error);
-            document.getElementById("errorCargaCSV").style.display = 'block';
+            // El mensaje de error ya se muestra dentro de cargarCSV
         }
+
+        // Listener para el buscador en tiempo real
+        document.getElementById('buscador').addEventListener('input', filtrarTabla);
+
+        // Persistence & Locks
+        camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(id => {
+            const campo = document.getElementById(id);
+            // Carga el valor persistente (si no está bloqueado)
+            if (localStorage.getItem(id)) {
+                campo.value = localStorage.getItem(id);
+            }
+
+            // Carga el estado de bloqueo
+            const isBloqueado = localStorage.getItem(`bloqueado_${id}`) === 'true';
+            if (isBloqueado) {
+                const checkboxId = `check${id.charAt(0).toUpperCase() + id.slice(1)}`;
+                const checkbox = document.getElementById(checkboxId);
+                if (checkbox) {
+                        checkbox.checked = true;
+                        alternarBloqueo(id); // Aplica la clase y el readonly
+                }
+            }
+            
+            // Event Listener para persistencia de valor (si no está bloqueado)
+            campo.addEventListener("input", () => {
+                if (localStorage.getItem(`bloqueado_${id}`) !== 'true') {
+                        localStorage.setItem(id, campo.value);
+                }
+            });
+        });
+
+
+        // Listener para evitar el submit del formulario con ENTER si hay sugerencias
+        document.querySelector('form').addEventListener('keydown', e => {
+            if (e.key === "Enter" && e.target.tagName === 'INPUT') {
+                const contenedorSugerencias = e.target.parentNode.querySelector('.sugerencias');
+                const items = contenedorSugerencias ? contenedorSugerencias.querySelectorAll('.sugerencia') : [];
+                
+                // Si no hay sugerencias visibles, o si el campo no es de sugerencia, se permite el submit
+                if (items.length === 0) {
+                    // Permite que el navegador haga el submit
+                    return;
+                }
+                
+                // Si hay más de una sugerencia, o está en foco y es un campo con botón de sugerencia,
+                // previene el submit y simula un Tab para mover el foco.
+                e.preventDefault(); 
+                const formElements = Array.from(document.querySelectorAll('form *')).filter(
+                    el => ['INPUT', 'BUTTON', 'TEXTAREA'].includes(el.tagName) && !el.disabled && !el.readOnly && el.type !== 'hidden'
+                );
+                const currentIndex = formElements.indexOf(e.target);
+                const nextIndex = (currentIndex + 1) % formElements.length;
+                formElements[nextIndex].focus();
+            }
+        });
 
         // --- Carga de Notas y Eventos Finales ---
         cargarNotas();
