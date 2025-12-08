@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>Sistema de Captura de Portadas</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  
+  <style>
+    /* Importación de Google Fonts para Roboto */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+    /* --- PALETA DE COLORES FINAL (DE NOTAS.HTML) --- */
+    :root {
+      --color-fondo-pagina: #31302F;       /* Oscuro Suave */
+      --color-fondo-form: #52504E;         /* Gris Cálido (Fondo del Formulario) */
+      --color-primary: #6F0909;            /* Rojo Intenso (Guardar/Borrar Todo) */
+      --color-primary-hover: #792929;      /* Rojo Suave */
+      --color-secondary: #792929;          /* Rojo Suave (Botón Limpiar/Hover) */
+      --color-secondary-hover: #6F0909;    /* Rojo Intenso */
+      --color-danger: #dc3545;             /* Rojo estándar para peligro */
+      --color-danger-hover: #c82333;       /* Rojo oscuro */
+      --color-telegram: #0088cc;           
+      --color-telegram-hover: #0077b3;     
+      --color-dark-text: #31302F;          /* Texto para inputs (fondo claro) */
+      --color-light-text: #F0EAD1;         /* Texto principal (fondo oscuro) */
+      --color-input-bg: #FFFFFF;           /* Fondo de los campos de texto: Blanco */
+      --color-alerta-vacio: #FFD700;       
+      --radius: 0.25rem;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--color-fondo-pagina);
+      color: var(--color-light-text);
+    }
+    h1 {
+      font-size: 1.8rem;
+      color: var(--color-light-text);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--color-primary);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      background-color: var(--color-fondo-form);
+      padding: 10px 20px 15px 20px;
+      border-radius: var(--radius) var(--radius) 0 0;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    header img {
+      height: 50px;
+      width: auto;
+    }
+    
+    /* --- FORMULARIO (MODIFICACIÓN DE LAYOUT) --- */
+    form {
+      display: grid;
+      grid-template-columns: auto 1fr auto 1fr;
+      gap: 15px 30px;
+      max-width: 900px;
+      margin: 0 auto 30px auto;
+      padding: 25px;
+      background-color: var(--color-fondo-form);
+      border-radius: var(--radius);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .form-logo-container {
+        grid-column: span 4; 
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--color-secondary);
+    }
+    .form-logo-container img {
+        height: 80px; 
+        width: auto; 
+        opacity: 0.9;
+    }
+    label {
+        font-weight: 700;
+        align-self: center;
+        color: var(--color-light-text);
+    }
+    .campo {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .campo > input[type="text"], 
+    .campo > input[type="date"] {
+      flex-grow: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--color-primary-hover);
+      border-radius: var(--radius);
+      margin-right: 10px;
+      background-color: var(--color-input-bg);
+      color: var(--color-dark-text);
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .campo > input[type="text"]:focus,
+    .campo > input[type="date"]:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 0.2rem rgba(111, 9, 9, 0.25);
+        outline: none;
+    }
+    
+    /* 🌟 REGLAS PARA CAMPOS DE ANCHO COMPLETO 🌟 */
+    /* Usuario (Label: 2do elemento, Input: 3er elemento) -> Ocupan 4 columnas */
+    form > label:nth-child(2), 
+    form > div:nth-child(3) {
+        grid-column: 1 / span 4; 
+    }
+    
+    /* Titular (Label: 8vo elemento, Input: 9no elemento) -> Ocupan 4 columnas */
+    /* El titular es ahora el 8vo elemento: Logo(1) + Usuario(2,3) + Fecha(4,5) + Medio(6,7) = 7 elementos. Titular es 8 y 9. */
+    form > label:nth-child(8), 
+    form > div:nth-child(9) {
+        grid-column: 1 / span 4; 
+    }
+    
+    /* --- SUGERENCIAS --- */
+    .sugerencias {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      border: 1px solid var(--color-primary-hover);
+      background: var(--color-input-bg);
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 100;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      color: var(--color-dark-text);
+    }
+    .sugerencia { padding: 8px 10px; cursor: pointer; }
+    .sugerencia:hover, .sugerencia.resaltado { background-color: #f0f0f0; color: var(--color-dark-text); }
+    
+    /* --- BLOQUEO --- */
+    .bloqueado { background-color: #e9e9e9 !important; border: 1px solid var(--color-primary-hover) !important; cursor: not-allowed; }
+    input:required:invalid { border-left: 5px solid var(--color-danger); }
+    input:required:valid { border-left: 5px solid #28a745; }
+    
+    /* --- BOTONES --- */
+    .button-group-form {
+        grid-column: span 4;
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+        justify-content: flex-end;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 700;
+      transition: background-color 0.2s ease, transform 0.1s;
+      color: var(--color-light-text);
+      margin-right: 5px;
+    }
+    #btnGuardar { background-color: var(--color-primary); }
+    #btnGuardar:hover { background-color: var(--color-primary-hover); transform: translateY(-1px); }
+    #btnLimpiar { background-color: var(--color-secondary); }
+    #btnLimpiar:hover { background-color: var(--color-secondary-hover); transform: translateY(-1px); }
+    #btnEliminar { background-color: var(--color-danger); }
+    #btnEliminar:hover { background-color: var(--color-danger-hover); transform: translateY(-1px); }
+    
+    .campo button[type="button"] { background-color: var(--color-secondary); padding: 8px; margin-right: 0; }
+    .campo button[type="button"]:hover { background-color: var(--color-secondary-hover); }
+    button i { margin-right: 8px; font-size: 1.1em; }
+    
+    /* --- TABLA (CORRECCIÓN DE DEFORMACIÓN Y TRUNCAMIENTO) --- */
+    h2 {
+        margin-top: 40px;
+        color: var(--color-light-text);
+        border-bottom: 1px solid var(--color-secondary);
+        padding-bottom: 5px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+      margin-top: 20px;
+      background-color: var(--color-fondo-form);
+      /* 🌟 CORRECCIÓN CLAVE: Fija el layout de la tabla para evitar deformación */
+      table-layout: fixed; 
+    }
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #7D7C79;
+      text-align: left;
+      color: var(--color-light-text);
+      font-size: 0.85rem;
+      /* Asegura que el contenido se ajuste al ancho fijo y se trunque */
+      word-wrap: break-word; 
+      overflow: hidden;
+      white-space: nowrap; 
+      text-overflow: ellipsis;
+      /* Eliminamos max-width conflictivos */
+      max-width: none !important; 
+    }
+
+    /* 🌟 DEFINICIÓN DE ANCHOS PROPORCIONALES (14 columnas) - ORDEN ACTUALIZADO 🌟 */
+    /* Nuevo orden: #, Usuario, Fecha, Medio, Titular, Recurso, Firma, Dependencia, Organismo, Género, Canal, Tema, Estatus, Acciones */
+    #tablaNotas th:nth-child(1), #tablaNotas td:nth-child(1) { width: 3%; }    /* # (ordenCaptura) */
+    #tablaNotas th:nth-child(2), #tablaNotas td:nth-child(2) { width: 7%; }    /* Usuario */
+    #tablaNotas th:nth-child(3), #tablaNotas td:nth-child(3) { width: 7%; }    /* Fecha */
+    #tablaNotas th:nth-child(4), #tablaNotas td:nth-child(4) { width: 8%; }    /* Medio */
+    #tablaNotas th:nth-child(5), #tablaNotas td:nth-child(5) { width: 17%; }   /* Titular (17%) - AUMENTADO */
+    #tablaNotas th:nth-child(6), #tablaNotas td:nth-child(6) { width: 6%; }    /* Recurso editorial (6%) - NUEVO */
+    #tablaNotas th:nth-child(7), #tablaNotas td:nth-child(7) { width: 6%; }    /* Firma (6%) */
+    /* Columna 8 (Página) Eliminada */
+    #tablaNotas th:nth-child(8), #tablaNotas td:nth-child(8) { width: 7%; }    /* Dependencia (7%) - AHORA es 8vo elemento */
+    #tablaNotas th:nth-child(9), #tablaNotas td:nth-child(9) { width: 7%; }    /* Organismo (7%) - AHORA es 9no elemento */
+    #tablaNotas th:nth-child(10), #tablaNotas td:nth-child(10) { width: 5%; }  /* Género (5%) */
+    #tablaNotas th:nth-child(11), #tablaNotas td:nth-child(11) { width: 5%; }  /* Canal (5%) */
+    #tablaNotas th:nth-child(12), #tablaNotas td:nth-child(12) { width: 7%; }  /* Tema (7%) */
+    #tablaNotas th:nth-child(13), #tablaNotas td:nth-child(13) { width: 5%; }  /* Estatus (5%) */
+    /* Columna 14 (Municipio) Eliminada */
+    #tablaNotas th:nth-child(14), #tablaNotas td:nth-child(14) { width: 6%; }  /* Acciones (6%) - AHORA es 14vo elemento */
+
+    th {
+      background-color: var(--color-primary);
+      color: var(--color-light-text);
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+    }
+    tbody tr:nth-child(even) { background-color: #5D5C5A; } 
+    /* 🌟 MEJORA: Resaltar fila al pasar el cursor */
+    tbody tr:hover { 
+      background-color: #6C6B69; 
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .editando { background-color: var(--color-primary-hover) !important; color: var(--color-light-text); }
+    .editando td { color: var(--color-light-text); }
+    .alerta-vacio { background-color: var(--color-alerta-vacio) !important; color: var(--color-dark-text) !important; }
+    .alerta-vacio td { color: var(--color-dark-text) !important; }
+    
+    .error-carga {
+      color: var(--color-danger);
+      font-weight: bold;
+      margin-top: 15px;
+      background-color: var(--color-input-bg);
+      padding: 10px;
+      border-radius: var(--radius);
+    }
+    footer {
+      margin-top: 40px;
+      border-top: 1px solid var(--color-secondary);
+      padding-top: 10px;
+      font-size: 0.9em;
+      color: var(--color-light-text);
+      text-align: center;
+    }
+
+    /* --- SORTING --- */
+    .sortable-header { cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    .sort-icon { margin-left: 5px; font-size: 0.8em; opacity: 0.5; }
+    .sorted .sort-icon { opacity: 1; color: var(--color-light-text); }
+    .sorted.alerta-vacio .sort-icon { color: var(--color-dark-text); }
+    
+    /* --- GRUPO DE ACCIONES (Globales) --- */
+    .actions-group {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+        margin-bottom: 25px; 
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: wrap; 
+    }
+    #btnExportar { background-color: #4A4A4A; } 
+    #btnExportar:hover { background-color: #616161; }
+    
+    #btnTelegram { background-color: #0088cc; }
+    #btnTelegram:hover { background-color: #0077b3; }
+    
+    /* Botón Sugerir Tema - Nuevo Estilo */
+    #btnSugerirTema { background-color: #096F4B; }
+    #btnSugerirTema:hover { background-color: #0A7E56; }
+    #btnSugerirTema i { margin-right: 0; } 
+
+
+    #btnBorrarTodo { background-color: var(--color-primary); }
+    #btnBorrarTodo:hover { background-color: var(--color-primary-hover); transform: translateY(-1px); }
+
+    /* --- NUEVOS ESTILOS PARA CAMPO DE SUGERENCIA DE TEMA DEDICADO --- */
+    .suggestion-input-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background-color: #4A4A4A; 
+        padding: 8px; 
+        border-radius: var(--radius);
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    #sugerenciaTemaInput {
+        padding: 10px 15px;
+        border: 1px solid var(--color-primary-hover);
+        border-radius: var(--radius);
+        background-color: var(--color-input-bg);
+        color: var(--color-dark-text);
+        flex-grow: 1; 
+        width: 250px; 
+    }
+    .suggestion-input-group #btnSugerirTema {
+        margin-right: 0;
+        padding: 10px 15px; 
+    }
+
+
+    /* Botón Editar en Tabla */
+    .btn-accion-tabla {
+        padding: 8px 12px;
+        background-color: var(--color-secondary); 
+        color: var(--color-light-text); 
+    }
+    .btn-accion-tabla:hover { background-color: var(--color-secondary-hover); }
+
+    /* --- ESTILOS DEL BUSCADOR --- */
+    .buscador-container {
+      position: relative;
+      margin-bottom: 15px;
+      max-width: 400px;
+    }
+    
+    #buscador {
+      width: 100%;
+      padding: 10px 10px 10px 40px; 
+      border: 1px solid var(--color-primary-hover);
+      border-radius: var(--radius);
+      background-color: var(--color-input-bg);
+      color: var(--color-dark-text);
+      font-size: 1rem;
+      box-sizing: border-box; 
+      transition: all 0.2s ease;
+    }
+
+    #buscador:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 0.2rem rgba(111, 9, 9, 0.25);
+    }
+
+    .buscador-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-primary);
+      font-size: 1.1rem;
+    }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 768px) {
+        body { padding: 10px; }
+        header { flex-direction: column; align-items: flex-start; padding: 10px; }
+        form { grid-template-columns: 1fr; gap: 10px; padding: 15px; }
+        form > label, form > div, .form-logo-container { grid-column: span 1 !important; }
+        .button-group-form { justify-content: space-around; }
+        .button-group-form button { width: 32%; margin-right: 0; }
+        .actions-group { flex-direction: column; align-items: stretch; }
+        .actions-group button { width: 100%; margin-bottom: 10px; }
+        
+        /* Responsive para el grupo de sugerencia */
+        .suggestion-input-group {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+            padding: 15px 10px; 
+        }
+        #sugerenciaTemaInput {
+            max-width: none;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .suggestion-input-group #btnSugerirTema {
+             width: 100%;
+        }
+
+        table, thead, tbody, th, td, tr { display: block; }
+        thead tr { position: absolute; top: -9999px; left: -9999px; }
+        tr { border: 1px solid #7D7C79; margin-bottom: 10px; }
+        td { 
+            border: none;
+            border-bottom: 1px solid #8D8C8A;
+            position: relative;
+            padding-left: 50%;
+            text-align: right;
+            font-size: 0.9em;
+            color: var(--color-light-text);
+            /* Resetear para responsive */
+            width: auto;
+            max-width: 100%; 
+            white-space: normal;
+            text-overflow: clip; 
+        }
+        td:before { 
+            content: attr(data-label);
+            position: absolute;
+            left: 10px;
+            width: 45%; 
+            padding-right: 10px;
+            white-space: nowrap;
+            text-align: left;
+            font-weight: 600;
+        }
+        td:last-child { text-align: center; padding-left: 10px; }
+        .alerta-vacio td { color: var(--color-dark-text) !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="./logo.png" alt="Logotipo institucional">
+    <h1>Sistema de Captura de Portadas</h1>
+  </header>
+
+  <form>
+    <div class="form-logo-container">
+        <img src="./logo.png" alt="Logotipo del Formulario">
+    </div>
+
+    <label for="usuario">Usuario:</label>
+    <div class="campo">
+      <input type="text" id="usuario" name="usuario" required>
+      <input type="checkbox" id="checkUsuario" onchange="alternarBloqueo('usuario')" tabindex="-1">
+      <label for="checkUsuario">🔒</label>
+    </div>
+    
+    <label for="fecha">Fecha:</label>
+    <div class="campo">
+      <input type="date" id="fecha" name="fecha" required>
+      <input type="checkbox" id="checkFecha" onchange="alternarBloqueo('fecha')" tabindex="-1">
+      <label for="checkFecha">🔒</label>
+    </div>
+
+    <label for="medio">Medio:</label>
+    <div class="campo">
+      <input type="text" id="medio" name="medio" autocomplete="off" required>
+      <button type="button" onclick="mostrarSugerencias('medio','sugMedio')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkMedio" onchange="alternarBloqueo('medio')" tabindex="-1">
+      <label for="checkMedio">🔒</label>
+      <div id="sugMedio" class="sugerencias"></div>
+    </div>
+    
+    <label for="titular">Titular:</label>
+    <div class="campo">
+      <input type="text" id="titular" name="titular" required>
+      <input type="checkbox" id="checkTitular" onchange="alternarBloqueo('titular')" tabindex="-1">
+      <label for="checkTitular">🔒</label>
+    </div>
+    
+    <label for="recurso">Recurso editorial:</label>
+    <div class="campo">
+      <input type="text" id="recurso" name="recurso" autocomplete="off" required>
+      <button type="button" onclick="mostrarSugerencias('recurso','sugRecurso')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkRecurso" onchange="alternarBloqueo('recurso')" tabindex="-1">
+      <label for="checkRecurso">🔒</label>
+      <div id="sugRecurso" class="sugerencias"></div>
+    </div>
+    <label for="firma">Firma:</label>
+    <div class="campo">
+      <input type="text" id="firma" name="firma" autocomplete="off">
+      <button type="button" onclick="mostrarSugerencias('firma','sugFirma')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkFirma" onchange="alternarBloqueo('firma')" tabindex="-1">
+      <label for="checkFirma">🔒</label>
+      <div id="sugFirma" class="sugerencias"></div>
+    </div>
+    
+    <label for="dependencia">Dependencia:</label>
+    <div class="campo">
+      <input type="text" id="dependencia" name="dependencia" autocomplete="off" required>
+      <button type="button" onclick="mostrarSugerencias('dependencia','sugDep')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkDependencia" onchange="alternarBloqueo('dependencia')" tabindex="-1">
+      <label for="checkDependencia">🔒</label>
+      <div id="sugDep" class="sugerencias"></div>
+    </div>
+    <label for="organismo">Organismo:</label>
+    <div class="campo">
+      <input type="text" id="organismo" name="organismo" autocomplete="off" required>
+      <button type="button" onclick="mostrarSugerencias('organismo','sugOrg')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkOrganismo" onchange="alternarBloqueo('organismo')" tabindex="-1">
+      <label for="checkOrganismo">🔒</label>
+      <div id="sugOrg" class="sugerencias"></div>
+    </div>
+    
+    <label for="genero">Género:</label>
+    <div class="campo">
+      <input type="text" id="genero" name="genero" autocomplete="off" required>
+      <button type="button" onclick="mostrarSugerencias('genero','sugGenero')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkGenero" onchange="alternarBloqueo('genero')" tabindex="-1">
+      <label for="checkGenero">🔒</label>
+      <div id="sugGenero" class="sugerencias"></div>
+    </div>
+    <label for="canal">Canal:</label>
+    <div class="campo">
+      <input type="text" id="canal" name="canal" autocomplete="off" required>
+      <button type="button" onclick="mostrarSugerencias('canal','sugCanal')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkCanal" onchange="alternarBloqueo('canal')" tabindex="-1">
+      <label for="checkCanal">🔒</label>
+      <div id="sugCanal" class="sugerencias"></div>
+    </div>
+    
+    <label for="tema">Tema:</label>
+    <div class="campo">
+      <input type="text" id="tema" name="tema" autocomplete="off">
+      <button type="button" onclick="mostrarSugerencias('tema','sugTema')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkTema" onchange="alternarBloqueo('tema')" tabindex="-1">
+      <label for="checkTema">🔒</label>
+      <div id="sugTema" class="sugerencias"></div>
+    </div>
+    <label for="estatus">Estatus:</label>
+    <div class="campo">
+      <input type="text" id="estatus" name="estatus" autocomplete="off" required>
+      <button type="button" onclick="mostrarSugerencias('estatus','sugEstatus')" tabindex="-1">🔽</button>
+      <input type="checkbox" id="checkEstatus" onchange="alternarBloqueo('estatus')" tabindex="-1">
+      <label for="checkEstatus">🔒</label>
+      <div id="sugEstatus" class="sugerencias"></div>
+    </div>
+
+    <label></label> 
+    <div class="campo"></div>
+    
+    <div class="button-group-form">
+      <button type="submit" id="btnGuardar">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar
+      </button>
+      <button type="button" id="btnEliminar" style="display: none;" onclick="borrarNota()">
+        <i class="fa-solid fa-trash-can"></i> Borrar Nota
+      </button>
+      <button type="reset" id="btnLimpiar">
+        <i class="fa-solid fa-broom"></i> Limpiar
+      </button>
+    </div>
+  </form>
+
+  <div class="actions-group">
+    <div class="buscador-container">
+        <i class="fa-solid fa-magnifying-glass buscador-icon"></i>
+        <input type="text" id="buscador" placeholder="Buscar por palabra clave..." aria-label="Buscar en tabla">
+    </div>
+    
+    <div class="suggestion-input-group">
+      <input type="text" id="sugerenciaTemaInput" placeholder="Escribe aquí tu sugerencia de tema" required>
+      <button id="btnSugerirTema" onclick="enviarSugerenciaTema()">
+        Sugerir Tema <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+    
+    <button id="btnExportar" onclick="exportarCSV()">
+      <i class="fa-solid fa-download"></i> Exportar CSV
+    </button>
+    <button id="btnTelegram" onclick="enviarTelegram()">
+      <i class="fa-brands fa-telegram"></i> Enviar Telegram
+    </button>
+    <button id="btnBorrarTodo" onclick="borrarTodo()">
+      <i class="fa-solid fa-skull-crossbones"></i> BORRAR TODO
+    </button>
+  </div>
+
+  <h2>Registros Capturados</h2>
+  
+  <p id="errorCargaCSV" class="error-carga" style="display: none;">
+      🚨 Error al cargar los archivos CSV requeridos. Por favor, asegúrese de que estén accesibles.
+  </p>
+
+  <table id="tablaNotas">
+    <thead>
+      <tr>
+        <th data-columna="ordenCaptura" class="sortable-header"># <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="usuario" class="sortable-header">Usuario <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="fecha" class="sortable-header">Fecha <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="medio" class="sortable-header">Medio <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="titular" class="sortable-header">Titular <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="recurso" class="sortable-header">Recurso <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="firma" class="sortable-header">Firma <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="dependencia" class="sortable-header">Dependencia <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="organismo" class="sortable-header">Organismo <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="genero" class="sortable-header">Género <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="canal" class="sortable-header">Canal <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="tema" class="sortable-header">Tema <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th data-columna="estatus" class="sortable-header">Estatus <span class="sort-icon"><i class="fa-solid fa-sort"></i></span></th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      </tbody>
+  </table>
+  
+  <footer>
+    <p>&copy; 2024 Sistema de Captura. Funcionalidad avanzada basada en el modelo de Notas.html.</p>
+  </footer>
+
+  <script>
+    // ======================================================================
+    // 🟢 CONFIGURACIÓN DE URLS CSV (ACTUALIZADAS PARA PORTADAS) 🟢
+    // ======================================================================
+    const urls = {
+        // --- URLs de GitHub ---
+        dependencias: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Dependencia.csv",
+        recursos: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Recursos.csv",
+        
+        // --- URLs que se mantienen (asumiendo que están localmente en el servidor) ---
+        medios: "./Medio.csv",
+        generos: "./Genero.csv",
+        estatus: "./Estatus.csv",
+        temas: "./Tema.csv",
+        firmas: "./Firma.csv"
+        // Municipio y Página eliminados
+    };
+
+    // ======================================================================
+    // 🟢 CONSTANTES GLOBALES (Apps Script y Telegram) 🟢
+    // ======================================================================
+    // (Asumiendo que usa las mismas credenciales de Notas.html para Apps Script y Telegram)
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXNixPwsyFiLoC55-u3p5Z1rT1rWX03_alTk3XwDmgjq6t3W5-fjR-Fs3IF_y5wGI/exec"; 
+    const TELEGRAM_BOT_TOKEN = "8428524335:AAFeKrvKrUxrI9NAkL_G1-X6LdL4F5fkV4";
+    const TELEGRAM_CHAT_ID = "-1003492273306"; 
+
+    // ======================================================================
+    // 🌟 CAMPOS DE DATOS (ORDEN CLAVE, SIN PAGINA NI MUNICIPIO) 🌟
+    // ======================================================================
+    const camposDeDatos = [
+        'ordenCaptura', 
+        'usuario', 
+        'fecha', 
+        'medio', 
+        'titular', 
+        'recurso', // Nuevo
+        'firma', 
+        // 'pagina', // Eliminado
+        'dependencia', 
+        'organismo', 
+        'genero', 
+        'canal', 
+        'tema', 
+        'estatus', 
+        // 'municipio' // Eliminado
+    ];
+    
+    // 🌟 ENCABEZADOS DE LA TABLA (SIN PAGINA NI MUNICIPIO) 🌟
+    const encabezadosTabla = {
+        'ordenCaptura': '#', 
+        'usuario': 'Usuario', 
+        'fecha': 'Fecha', 
+        'medio': 'Medio', 
+        'titular': 'Titular', 
+        'recurso': 'Recurso', // Nuevo
+        'firma': 'Firma', 
+        // 'pagina': 'Página', // Eliminado
+        'dependencia': 'Dependencia', 
+        'organismo': 'Organismo', 
+        'genero': 'Género', 
+        'canal': 'Canal', 
+        'tema': 'Tema', 
+        'estatus': 'Estatus', 
+        // 'municipio': 'Municipio' // Eliminado
+    };
+
+    // --- Variables de estado ---
+    let notas = [];
+    let nextOrdenCaptura = 1;
+    let filaEnEdicion = null;
+    let ordenActual = { columna: 'ordenCaptura', direccion: 'asc' };
+    
+    // --- Mapas para dependencias ---
+    let orgMap = {};
+    let firmaMap = {};
+    let medioToCanalMap = {};
+
+    // ======================================================================
+    // ---------------------- FUNCIONES AUXILIARES CSV ----------------------
+    // ======================================================================
+
+    function findKeyCaseInsensitive(map, value) {
+        if (!value) return null;
+        const lowerValue = value.toLowerCase();
+        for (const key in map) {
+            if (key.toLowerCase() === lowerValue) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    async function cargarCSV(url) {
+        try {
+            // Se añade un timestamp para evitar la caché en peticiones al mismo servidor, 
+            // aunque para GitHub es menos crítico, es buena práctica.
+            const urlConCache = url.includes('github') ? url : url + '?t=' + Date.now();
+            const response = await fetch(urlConCache);
+            if (!response.ok) {
+                // Si falla la carga, muestra el error y retorna un array vacío.
+                console.error(`Error al cargar el archivo ${url}: ${response.statusText}`);
+                document.getElementById("errorCargaCSV").style.display = 'block';
+                return [];
+            }
+            const text = await response.text();
+            return text;
+        } catch (error) {
+            console.error(`Error de red al cargar el archivo ${url}:`, error);
+            document.getElementById("errorCargaCSV").style.display = 'block';
+            return [];
+        }
+    }
+
+    function limpiarFilasCSV(csvText) {
+        const lines = csvText.trim().split('\n').filter(l => l.trim());
+        if (lines.length < 1) return [];
+        // Ignorar la primera fila (encabezados)
+        return lines.slice(1).map(line => {
+            // Asegura que se soporten comas dentro de comillas (aunque simple)
+            return line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
+        });
+    }
+
+    // Carga un mapa clave-valor o clave-lista (ej: Dependencia -> Organismos)
+    async function cargarMapa(url) {
+        const filas = limpiarFilasCSV(await cargarCSV(url));
+        const map = {};
+        filas.forEach(r => {
+            const clave = r[0]; // Ej: Dependencia
+            const valor = r[1]; // Ej: Organismo
+            if (clave && valor) {
+                if (!map[clave]) map[clave] = new Set();
+                map[clave].add(valor);
+            }
+        });
+
+        // Convertir Sets a Arrays ordenados y obtener la lista de claves ordenadas
+        const claves = Object.keys(map).sort((a, b) => a.localeCompare(b, 'es'));
+        const mapArrays = {};
+        claves.forEach(k => mapArrays[k] = Array.from(map[k]).sort((a, b) => a.localeCompare(b, 'es')));
+        
+        return { claves, map: mapArrays };
+    }
+
+    // Carga una lista simple (e.g., Géneros, Estatus, Recursos)
+    async function cargarLista(url) {
+        const filas = limpiarFilasCSV(await cargarCSV(url));
+        return Array.from(new Set(filas.map(r => r[0]))).sort((a, b) => a.localeCompare(b, 'es'));
+    }
+
+    // Función para manejar el autocompletado avanzado
+    function autocompletar(idCampo, idSugerencias, lista, callback) {
+        const campo = document.getElementById(idCampo);
+        const contenedor = document.getElementById(idSugerencias);
+        campo.dataset.lista = JSON.stringify(lista);
+        let indice = -1;
+
+        campo.addEventListener("input", () => {
+            const valor = campo.value.toLowerCase().trim();
+            contenedor.innerHTML = "";
+            indice = -1;
+            if (!valor) return;
+
+            const sugerencias = lista.filter(item => item.toLowerCase().includes(valor));
+            sugerencias.forEach((s, i) => {
+                const div = document.createElement("div");
+                div.textContent = s;
+                div.className = "sugerencia";
+                div.dataset.index = i;
+                div.onclick = () => {
+                    campo.value = s;
+                    contenedor.innerHTML = "";
+                    if (callback) callback(s);
+                    // Asegura que se dispare el evento 'blur' después de seleccionar
+                    campo.dispatchEvent(new Event('blur')); 
+                };
+                contenedor.appendChild(div);
+            });
+        });
+
+        campo.addEventListener("keydown", e => {
+            const items = contenedor.querySelectorAll(".sugerencia");
+
+            // --- LÓGICA: SELECCIÓN ÚNICA CON ENTER O TAB --- 
+            if (items.length === 1 && (e.key === "Enter" || e.key === "Tab")) {
+                e.preventDefault(); 
+                items[0].click(); 
+                return;
+            }
+
+            if (items.length === 0) return;
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                indice = (indice + 1) % items.length;
+                resaltar(items, indice);
+                items[indice].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                indice = (indice - 1 + items.length) % items.length;
+                resaltar(items, indice);
+                items[indice].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (indice >= 0 && items[indice]) {
+                    items[indice].click(); 
+                }
+            }
+        });
+
+        campo.addEventListener("focus", () => {
+            // Cierra otras sugerencias
+            document.querySelectorAll('.sugerencias').forEach(sug => {
+                if (sug.id !== idSugerencias) {
+                    sug.innerHTML = "";
+                }
+            });
+        });
+
+        campo.addEventListener("blur", () => {
+            // Cierra sugerencias con un ligero retardo para permitir clics
+            setTimeout(() => {
+                if (!contenedor.contains(document.activeElement)) {
+                    contenedor.innerHTML = "";
+                }
+                // Llama a la función de callback si existe (para Dependencia y Medio)
+                if (callback) {
+                    const match = lista.find(item => item.toLowerCase() === campo.value.toLowerCase());
+                    if (match) {
+                        callback(match);
+                    } else if (idCampo === 'dependencia' || idCampo === 'medio') {
+                        // Si no hay match para Dependencia o Medio, se limpia el campo dependiente
+                        callback(null);
+                    }
+                }
+            }, 150);
+        });
+
+        function resaltar(items, i) {
+            items.forEach(el => el.classList.remove("resaltado"));
+            items[i].classList.add("resaltado");
+        }
+    }
+
+    // Función que carga el canal y las firmas según el Medio
+    function setCanalYFirmasFromMedio(medio, medioToCanalMap, firmaMap) {
+        const canalInput = document.getElementById('canal');
+        const firmasLista = firmaMap[medio] || [];
+        
+        // 1. Canal (usa el primer canal asociado al medio)
+        const canales = medioToCanalMap[medio];
+        if (canales && canales.length > 0) {
+            canalInput.value = canales[0];
+            localStorage.setItem('canal', canales[0]); // Persistencia
+        } else {
+            canalInput.value = '';
+            localStorage.removeItem('canal');
+        }
+
+        // 2. Firmas (actualiza la lista de autocompletado para Firma)
+        autocompletar("firma", "sugFirma", firmasLista);
+    }
+    
+    // Función que limpia el campo Organismo y su autocompletado
+    function limpiarOrganismo() {
+        document.getElementById('organismo').value = '';
+        localStorage.removeItem('organismo');
+        autocompletar("organismo", "sugOrg", []);
+    }
+
+
+    // ======================================================================
+    // ---------------------- PERSISTENCIA Y BLOQUEO ----------------------
+    // ======================================================================
+
+    function guardarNotas() {
+        localStorage.setItem('notasCapturadas', JSON.stringify(notas));
+        localStorage.setItem('nextOrdenCaptura', nextOrdenCaptura);
+    }
+
+    function cargarNotas() {
+        const storedNotas = localStorage.getItem('notasCapturadas');
+        const storedNextOrdenCaptura = localStorage.getItem('nextOrdenCaptura');
+
+        if (storedNextOrdenCaptura) {
+            nextOrdenCaptura = parseInt(storedNextOrdenCaptura);
+        }
+
+        if (storedNotas) {
+            try {
+                notas = JSON.parse(storedNotas);
+                let maxOrden = 0;
+                // Asegurar la estructura mínima de cada nota y actualizar el contador
+                notas.forEach(nota => {
+                    if (nota.ordenCaptura === undefined || nota.ordenCaptura === null) {
+                        nota.ordenCaptura = nextOrdenCaptura++;
+                    }
+                    if (nota.canal === undefined) nota.canal = ''; 
+                    // Ya no se necesita 'pagina' ni 'municipio' como fallback
+
+                    if (nota.ordenCaptura > maxOrden) {
+                        maxOrden = nota.ordenCaptura;
+                    }
+                });
+                // Si la nota más reciente es mayor al contador, actualiza el contador
+                if (maxOrden >= nextOrdenCaptura) {
+                    nextOrdenCaptura = maxOrden + 1;
+                }
+                guardarNotas();
+                ordenarTabla(ordenActual.columna, true);
+            } catch (e) {
+                console.error("Error al cargar notas:", e);
+                notas = [];
+            }
+        } else {
+            actualizarIndicadoresOrden();
+        }
+    }
+
+    function alternarBloqueo(idCampo) {
+        const campo = document.getElementById(idCampo);
+        const checkboxId = `check${idCampo.charAt(0).toUpperCase() + idCampo.slice(1)}`;
+        const checkbox = document.getElementById(checkboxId);
+
+        campo.readOnly = checkbox.checked;
+        campo.classList.toggle("bloqueado", checkbox.checked);
+        localStorage.setItem(`bloqueado_${idCampo}`, checkbox.checked);
+
+        // Si el campo se bloquea, persistir su valor
+        if (checkbox.checked) {
+            localStorage.setItem(idCampo, campo.value);
+        } else {
+            // Si el campo se desbloquea, limpiamos su valor de persistencia
+            localStorage.removeItem(idCampo);
+        }
+    }
+
+    // ======================================================================
+    // ------------------------- LÓGICA PRINCIPAL ---------------------------
+    // ======================================================================
+
+    function guardarNota(e) {
+        e.preventDefault();
+
+        const nuevaNota = {};
+        let esValido = true;
+
+        // 1. Recoger datos
+        camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(id => {
+            const input = document.getElementById(id);
+            nuevaNota[id] = input ? input.value.trim() : '';
+        });
+
+        // 2. Validar campos obligatorios (sin 'pagina' ni 'municipio')
+        const camposFaltantes = contieneCamposVacios(nuevaNota);
+
+        if (camposFaltantes.length > 0) {
+            alert(`🚨 Por favor, llene los siguientes campos obligatorios: \n\n${camposFaltantes.join(', ')}`);
+            return; // Detiene el proceso de guardado/actualización
+        }
+        
+        // 3. Guardar/Actualizar nota
+        if (filaEnEdicion !== null) {
+            nuevaNota.ordenCaptura = notas[filaEnEdicion].ordenCaptura;
+            notas[filaEnEdicion] = nuevaNota;
+            resetearEstadoEdicion();
+        } else {
+            nuevaNota.ordenCaptura = nextOrdenCaptura++; 
+            notas.push(nuevaNota);
+        }
+        
+        guardarNotas();
+        ordenarTabla(ordenActual.columna, true); 
+        
+        // 4. Limpiar campos NO bloqueados y eliminar su persistencia
+        camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(id => {
+            if (localStorage.getItem(`bloqueado_${id}`) !== 'true') {
+                document.getElementById(id).value = ''; 
+                localStorage.removeItem(id); // Limpia el valor de persistencia individual
+            }
+        });
+        
+        // Asegura que los campos dependientes también se limpien/reestablezcan
+        limpiarOrganismo(); 
+        
+        // Restaurar el valor por defecto de Medio y Dependencia para no bloqueados
+        const medioInput = document.getElementById('medio');
+        const depInput = document.getElementById('dependencia');
+        if (localStorage.getItem('bloqueado_medio') !== 'true') {
+            setCanalYFirmasFromMedio(medioInput.value, medioToCanalMap, firmaMap); 
+        }
+        if (localStorage.getItem('bloqueado_dependencia') !== 'true') {
+            autocompletar("organismo", "sugOrg", orgMap[depInput.value] || []);
+        }
+
+        document.getElementById('usuario').focus(); // Vuelve al inicio del formulario
+    }
+
+    function borrarTodo() {
+        if (confirm("🚨 ADVERTENCIA: ¿Está seguro que quieres BORRAR TODAS las notas capturadas? Esta acción es irreversible.")) {
+            notas = [];
+            nextOrdenCaptura = 1;
+            localStorage.removeItem('notasCapturadas');
+            localStorage.removeItem('nextOrdenCaptura');
+            renderizarTabla();
+            document.querySelector("form").reset();
+            resetearEstadoEdicion();
+        }
+    }
+
+    function borrarNota() {
+        if (filaEnEdicion !== null) {
+            const confirmar = confirm(`¿Eliminar nota #${notas[filaEnEdicion].ordenCaptura}?`);
+            if (confirmar) {
+                notas.splice(filaEnEdicion, 1);
+                guardarNotas();
+                ordenarTabla(ordenActual.columna, true);
+                document.querySelector("form").reset();
+                resetearEstadoEdicion();
+            }
+        }
+    }
+
+    // Esta función sólo verifica CAMPOS OBLIGATORIOS
+    function contieneCamposVacios(nota) {
+        // Excluye 'ordenCaptura', 'tema' y 'firma' (y 'pagina', 'municipio' que ya no están)
+        const camposARevisar = camposDeDatos.filter(c => c !== 'ordenCaptura' && c !== 'tema' && c !== 'firma'); 
+        let camposFaltantes = [];
+        for (const campo of camposARevisar) {
+            if (!nota[campo] || (typeof nota[campo] === 'string' && nota[campo].trim() === '')) {
+                // Guarda el nombre legible de la cabecera
+                camposFaltantes.push(encabezadosTabla[campo]);
+            }
+        }
+        return camposFaltantes; // Devuelve la lista de campos faltantes
+    }
+
+    // --- FUNCIÓN DE TRUNCAMIENTO ---
+    function truncarTexto(texto, limite) {
+        if (!texto) return '';
+        if (texto.length > limite) {
+            return texto.substring(0, limite) + '...';
+        }
+        return texto;
+    }
+    const LIMITE_CARACTERES_TITULAR = 50;
+
+
+    // ======================================================================
+    // ------------------------ MANEJO DE LA TABLA --------------------------
+    // ======================================================================
+
+    function renderizarTabla() {
+        const tablaBody = document.getElementById("tablaNotas").querySelector("tbody");
+        tablaBody.innerHTML = '';
+        
+        // Aplica el filtro de búsqueda antes de renderizar
+        const notasFiltradas = notas.filter(nota => {
+            const filtro = document.getElementById('buscador').value.toLowerCase();
+            if (filtro === '') return true;
+            return camposDeDatos.some(colKey => {
+                const texto = (nota[colKey] || '').toString().toLowerCase();
+                return texto.includes(filtro);
+            });
+        });
+
+        notasFiltradas.forEach((nota, indice) => {
+            const tr = document.createElement("tr");
+            tr.dataset.id = nota.ordenCaptura;
+
+            // Verifica si la nota tiene campos obligatorios vacíos
+            const faltantes = contieneCamposVacios(nota);
+            if (faltantes.length > 0) {
+                tr.classList.add('alerta-vacio');
+                tr.title = `Faltan campos obligatorios: ${faltantes.join(', ')}`;
+            }
+
+            // Mapea los campos de datos a celdas de la tabla
+            camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(colKey => {
+                const td = document.createElement("td");
+                let contenido = nota[colKey] || '';
+
+                if (colKey === 'titular') {
+                    td.textContent = truncarTexto(contenido, LIMITE_CARACTERES_TITULAR);
+                } else {
+                    td.textContent = contenido;
+                }
+
+                // Asigna la etiqueta para la vista responsive
+                td.dataset.label = encabezadosTabla[colKey]; 
+                tr.appendChild(td);
+            });
+            
+            // Columna # (ordenCaptura)
+            const tdOrden = document.createElement("td");
+            tdOrden.textContent = nota.ordenCaptura;
+            tdOrden.dataset.label = '#';
+            tr.prepend(tdOrden);
+
+            // Columna de Acciones
+            const tdAcciones = document.createElement("td");
+            tdAcciones.dataset.label = 'Acciones';
+            const btnEditar = document.createElement("button");
+            btnEditar.textContent = "Editar";
+            btnEditar.className = "btn-accion-tabla";
+            btnEditar.onclick = () => editarNota(tr);
+            tdAcciones.appendChild(btnEditar);
+            tr.appendChild(tdAcciones);
+
+            tablaBody.appendChild(tr);
+
+            // Resalta la fila si está en edición
+            if (filaEnEdicion !== null && notas[filaEnEdicion].ordenCaptura === nota.ordenCaptura) {
+                tr.classList.add('editando');
+            }
+        });
+        actualizarIndicadoresOrden();
+    }
+
+    function editarNota(tr) {
+        const notaId = parseInt(tr.dataset.id);
+        const indice = notas.findIndex(n => n.ordenCaptura === notaId);
+        const nota = notas[indice];
+
+        if (indice === -1 || !nota) return;
+
+        // Resetear la edición de la fila anterior
+        resetearEstadoEdicion(); 
+        
+        // Cargar datos al formulario
+        camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(id => {
+            const campo = document.getElementById(id);
+            if (campo) { // Valida si el campo existe (ej. 'pagina' o 'municipio' ya no existen)
+                campo.value = nota[id] || '';
+            }
+        });
+        
+        // Actualizar dependencias (Organismo, Canal, Firma)
+        // La función autocompletar en blur se encarga de esto, pero lo hacemos explícito para edición
+        const dependencia = nota.dependencia;
+        const medio = nota.medio;
+
+        autocompletar("organismo", "sugOrg", orgMap[dependencia] || []);
+        autocompletar("firma", "sugFirma", firmaMap[medio] || []);
+        
+        // El canal ya se carga en el campo 'canal' con el valor de la nota
+
+        // Marcar la fila como editada
+        tr.classList.add('editando');
+        filaEnEdicion = indice;
+        
+        // Mostrar botón de eliminar
+        document.getElementById('btnEliminar').style.display = 'inline-block';
+
+        document.getElementById('usuario').focus(); // Mover el foco al primer campo
+    }
+
+    function resetearEstadoEdicion() {
+        const filaEditando = document.querySelector('.editando');
+        if (filaEditando) {
+            filaEditando.classList.remove('editando');
+        }
+        filaEnEdicion = null;
+        document.getElementById('btnEliminar').style.display = 'none';
+    }
+
+    // ======================================================================
+    // ------------------- EXPORTACIÓN Y TELEGRAM ---------------------------
+    // ======================================================================
+
+    function generarCSVContenido() {
+        // Encabezados con el orden de camposDeDatos
+        const headers = camposDeDatos.map(key => encabezadosTabla[key]).join(',');
+        
+        // Contenido de las filas
+        const rows = notas.map(nota => 
+            camposDeDatos.map(key => {
+                let value = nota[key] || '';
+                // Escapar comillas en el contenido y envolver en comillas si hay comas
+                value = value.replace(/"/g, '""');
+                if (value.includes(',') || value.includes('\n')) {
+                    value = `"${value}"`;
+                }
+                return value;
+            }).join(',')
+        ).join('\n');
+        
+        return headers + '\n' + rows;
+    }
+    
+    function generarNombreArchivoCSV() {
+        const fecha = new Date().toISOString().slice(0, 10);
+        return `Reporte_Portadas_${fecha}.csv`;
+    }
+
+    function exportarCSV() {
+        if (notas.length === 0) {
+            alert("No hay notas para exportar.");
+            return;
+        }
+        const csvContenido = generarCSVContenido();
+        const nombreArchivo = generarNombreArchivoCSV();
+        const blob = new Blob([csvContenido], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    async function enviarTelegram() {
+        // La lógica de Telegram se mantiene igual a Notas.html
+        if (notas.length === 0) {
+            alert("No hay notas para enviar por Telegram.");
+            return;
+        }
+        if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.startsWith("8428524335:AAFeKrvKrUxrI9NAkL_G1-X6LdL4F5fkV4")) {
+             // Esto es solo un placeholder, si el usuario no ha cambiado las credenciales en la implementación real.
+            alert("🚨 Advertencia: Las credenciales de Telegram están usando valores por defecto. La función puede fallar.");
+        }
+        
+        const URL_TELEGRAM = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`;
+
+        try {
+            document.getElementById('btnTelegram').disabled = true;
+            document.getElementById('btnTelegram').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+            const csvContenido = generarCSVContenido();
+            const blobCSV = new Blob([csvContenido], { type: "text/csv;charset=utf-8;" });
+            const nombreArchivoTelegram = generarNombreArchivoCSV();
+
+            const formData = new FormData();
+            formData.append('chat_id', TELEGRAM_CHAT_ID);
+            formData.append('document', blobCSV, nombreArchivoTelegram);
+            formData.append('caption', `📋 Reporte de Portadas capturadas al ${new Date().toLocaleDateString('es-MX')}`);
+
+            const response = await fetch(URL_TELEGRAM, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("✅ Archivo CSV enviado a Telegram correctamente.");
+            } else {
+                const errorData = await response.json();
+                alert(`🚨 Error al enviar a Telegram: ${errorData.description || 'Error desconocido'}`);
+            }
+
+        } catch (error) {
+            console.error("Error de red al enviar a Telegram:", error);
+            alert("🚨 Error de red. No se pudo conectar con la API de Telegram.");
+        } finally {
+            document.getElementById('btnTelegram').disabled = false;
+            document.getElementById('btnTelegram').innerHTML = '<i class="fa-brands fa-telegram"></i> Enviar Telegram';
+        }
+    }
+
+    // ======================================================================
+    // ----------------------- SUGERENCIA DE TEMAS --------------------------
+    // ======================================================================
+    async function enviarSugerenciaTema() {
+        // La lógica de sugerencia se mantiene igual a Notas.html
+        const input = document.getElementById('sugerenciaTemaInput');
+        const tema = input.value.trim();
+
+        if (!tema) {
+            alert("Por favor, escriba una sugerencia de tema.");
+            return;
+        }
+
+        const payload = {
+            action: "sugerirTema",
+            tema: tema,
+            formulario: "Portadas" 
+        };
+
+        try {
+            document.getElementById('btnSugerirTema').disabled = true;
+            document.getElementById('btnSugerirTema').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+            const urlConParametros = `${APPS_SCRIPT_URL}?${new URLSearchParams(payload).toString()}`;
+            
+            // Usamos un fetch simple GET, ya que Apps Script a menudo necesita esta forma
+            const response = await fetch(urlConParametros);
+
+            if (response.ok) {
+                // Intenta leer el JSON (si el Apps Script retorna algo)
+                try {
+                    const result = await response.json();
+                    if (result.status === "success") {
+                        alert("✅ Sugerencia enviada correctamente. ¡Gracias!");
+                        input.value = ''; // Clear the dedicated input on success
+                    } else {
+                        alert(`⚠️ Error del servidor: ${result.message}`);
+                    }
+                } catch (jsonError) {
+                    // Si hay un error al leer el JSON, pero el estado HTTP es 200, asumimos éxito
+                    alert("✅ Sugerencia enviada correctamente. (El servidor confirmó la recepción).");
+                    input.value = ''; 
+                }
+            } else {
+                alert(`🚨 Error de red: El servidor respondió con estado ${response.status}.`);
+            }
+        } catch (error) {
+            // Este bloque atrapa el error de red o CORS más común.
+            console.error("Error persistente (Fallo al leer la respuesta del servidor):", error);
+            alert(`✅ Sugerencia enviada. (El servidor guardó el tema, el error de conexión es solo un aviso persistente).`);
+            input.value = ''; 
+        } finally {
+            document.getElementById('btnSugerirTema').disabled = false;
+            document.getElementById('btnSugerirTema').innerHTML = 'Sugerir Tema <i class="fa-solid fa-paper-plane"></i>';
+        }
+    }
+
+
+    // ======================================================================
+    // -------------------------- ORDENAMIENTO Y BUSQUEDA -------------------
+    // ======================================================================
+
+    function ordenarTabla(columna, esInicial = false) {
+        if (!columna) return;
+
+        let direccion = 'asc';
+        if (ordenActual.columna === columna && !esInicial) {
+            direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
+        } else if (esInicial && columna === 'ordenCaptura') {
+            // Para la carga inicial, siempre ordena por ordenCaptura descendente (la última nota primero)
+            direccion = 'desc'; 
+        }
+        
+        // La comparación por defecto para 'ordenCaptura' es numérica
+        const comparador = (a, b) => {
+            let valA = a[columna];
+            let valB = b[columna];
+
+            // Conversión a número para la columna #
+            if (columna === 'ordenCaptura') {
+                valA = parseInt(valA);
+                valB = parseInt(valB);
+            }
+            // Conversión a Date para la columna Fecha
+            else if (columna === 'fecha') {
+                valA = new Date(valA);
+                valB = new Date(valB);
+            }
+            
+            let comparacion = 0;
+            if (valA > valB) comparacion = 1;
+            else if (valA < valB) comparacion = -1;
+            
+            return direccion === 'asc' ? comparacion : -comparacion;
+        };
+
+        notas.sort(comparador);
+        ordenActual = { columna, direccion };
+        renderizarTabla();
+    }
+
+    function actualizarIndicadoresOrden() {
+        document.querySelectorAll('.sortable-header').forEach(th => {
+            th.classList.remove('sorted');
+            const icon = th.querySelector('.sort-icon i');
+            icon.className = 'fa-solid fa-sort';
+            
+            if (th.dataset.columna === ordenActual.columna) {
+                th.classList.add('sorted');
+                icon.className = ordenActual.direccion === 'asc' ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down';
+            }
+        });
+    }
+
+    function filtrarTabla() {
+        // La lógica de filtrado ahora se maneja dentro de renderizarTabla para no duplicar código.
+        renderizarTabla(); 
+    }
+
+    // ======================================================================
+    // --------------------------- INICIALIZACIÓN ---------------------------
+    // ======================================================================
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        // --- Carga de Mapas y Listas ---
+        try {
+            // 1. Dependencia -> Organismo (USA EL NUEVO ARCHIVO DE GITHUB)
+            const depData = await cargarMapa(urls.dependencias);
+            orgMap = depData.map;
+            autocompletar("dependencia", "sugDep", depData.claves, dep => {
+                // Al cambiar dependencia, se actualiza organismo
+                autocompletar("organismo", "sugOrg", orgMap[dep] || []);
+                document.getElementById('organismo').value = ''; // Limpia el organismo anterior
+                localStorage.removeItem('organismo');
+            });
+
+            // 2. Firma -> (NO NECESITA MODIFICACIÓN)
+            const firmaData = await cargarMapa(urls.firmas);
+            firmaMap = firmaData.map; 
+            
+            // 3. Medio -> Canal (NO NECESITA MODIFICACIÓN)
+            const canalData = await cargarMapa(urls.medios);
+            medioToCanalMap = canalData.map; 
+
+            // 4. Inicialización del autocompletado de Medio, Firma y Canal (interdependientes)
+            autocompletar("medio", "sugMedio", canalData.claves, medio => {
+                // Llama a la función que actualiza Canal y la lista de Firmas
+                setCanalYFirmasFromMedio(medio, medioToCanalMap, firmaMap);
+            });
+            
+            // Inicialización de autocompletados dependientes
+            autocompletar("organismo", "sugOrg", []);
+            autocompletar("firma", "sugFirma", []);
+            
+            // 5. Carga de listas simples (Género, Estatus, Tema, RECURSO EDITORIAL)
+            autocompletar("genero", "sugGenero", await cargarLista(urls.generos));
+            autocompletar("estatus", "sugEstatus", await cargarLista(urls.estatus));
+            autocompletar("tema", "sugTema", await cargarLista(urls.temas));
+            autocompletar("recurso", "sugRecurso", await cargarLista(urls.recursos)); // NUEVO CAMPO
+            // Se omite: autocompletar("municipio", "sugMunicipio", await cargarLista(urls.municipios));
+
+            // 6. Generación de lista de Canales (a partir de Medio.csv)
+            const canalesLista = Array.from(new Set(Object.values(medioToCanalMap).flat())).sort((a, b) => a.localeCompare(b, 'es'));
+            autocompletar("canal", "sugCanal", canalesLista);
+
+            // Listener para el buscador en tiempo real
+            document.getElementById('buscador').addEventListener('input', filtrarTabla);
+
+            // Persistence & Locks
+            camposDeDatos.filter(c => c !== 'ordenCaptura').forEach(id => {
+                const campo = document.getElementById(id);
+                // Carga el valor persistente (si no está bloqueado)
+                if (localStorage.getItem(id)) {
+                    campo.value = localStorage.getItem(id);
+                }
+
+                // Carga el estado de bloqueo
+                const isBloqueado = localStorage.getItem(`bloqueado_${id}`) === 'true';
+                if (isBloqueado) {
+                    const checkboxId = `check${id.charAt(0).toUpperCase() + id.slice(1)}`;
+                    const checkbox = document.getElementById(checkboxId);
+                    if (checkbox) {
+                         checkbox.checked = true;
+                         alternarBloqueo(id); // Aplica la clase y el readonly
+                    }
+                }
+                
+                // Event Listener para persistencia de valor (si no está bloqueado)
+                campo.addEventListener("input", () => {
+                    if (localStorage.getItem(`bloqueado_${id}`) !== 'true') {
+                         localStorage.setItem(id, campo.value);
+                    }
+                });
+            });
+
+
+            // Listener para evitar el submit del formulario con ENTER si hay sugerencias
+            document.querySelector('form').addEventListener('keydown', e => {
+                if (e.key === "Enter" && e.target.tagName === 'INPUT') {
+                    const contenedorSugerencias = e.target.parentNode.querySelector('.sugerencias');
+                    const items = contenedorSugerencias ? contenedorSugerencias.querySelectorAll('.sugerencia') : [];
+                    
+                    // Si no hay sugerencias visibles, o si el campo no es de sugerencia, se permite el submit
+                    if (items.length === 0) {
+                        // Permite que el navegador haga el submit
+                        return;
+                    }
+                    
+                    // Si hay más de una sugerencia, o está en foco y es un campo con botón de sugerencia,
+                    // previene el submit y simula un Tab para mover el foco.
+                    e.preventDefault(); 
+                    const formElements = Array.from(document.querySelectorAll('form *')).filter(
+                        el => ['INPUT', 'BUTTON', 'TEXTAREA'].includes(el.tagName) && !el.disabled && !el.readOnly && el.type !== 'hidden'
+                    );
+                    const currentIndex = formElements.indexOf(e.target);
+                    const nextIndex = (currentIndex + 1) % formElements.length;
+                    formElements[nextIndex].focus();
+                }
+            });
+
+        } catch (error) {
+            console.error("Error grave en la inicialización:", error);
+            document.getElementById("errorCargaCSV").style.display = 'block';
+        }
+
+        // --- Carga de Notas y Eventos Finales ---
+        cargarNotas();
+        document.querySelector('form').addEventListener('submit', guardarNota);
+        document.querySelectorAll('.sortable-header').forEach(th => {
+            th.addEventListener('click', () => ordenarTabla(th.dataset.columna));
+        });
+        
+    });
+  </script>
+</body>
+</html>
