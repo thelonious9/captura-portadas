@@ -204,11 +204,13 @@
     focusables[next].focus();
   }
 
-  // Bloqueo
+  // Bloqueo (se usa en botones dropdown y atajo)
   function alternarBloqueo(id) {
     const campo = document.getElementById(id);
     campo.readOnly = !campo.readOnly;
     campo.classList.toggle("bloqueado", campo.readOnly);
+    const lockBox = document.getElementById("lock-" + id);
+    if (lockBox) lockBox.checked = campo.readOnly;
   }
 
   // CSV helpers
@@ -407,7 +409,7 @@
     showMessage('success','Modo edición activado');
   }
 
-  // Guardar (en ámbito global)
+  // Guardar (en ámbito global) — actualizado para limpiar solo desbloqueados y devolver foco a Titular
   window.guardarRegistro = function guardarRegistro() {
     const nuevaNota = {
       fecha: document.getElementById("fecha").value.trim(),
@@ -440,7 +442,13 @@
     localStorage.setItem("notasPlanas", JSON.stringify(window.notas));
     localStorage.setItem("nextOrdenCapturaPlanas", window.nextOrdenCaptura);
     renderizarTabla();
-    document.getElementById("formCaptura").reset();
+
+    // Limpiar solo inputs no bloqueados
+    document.querySelectorAll('#formCaptura input[type="text"], #formCaptura input[type="date"]').forEach(inp => {
+      if (!inp.readOnly) inp.value = "";
+    });
+
+    // Foco en Titular
     document.getElementById("titular").focus();
   };
 
@@ -566,8 +574,18 @@
     document.getElementById("btnExportar").addEventListener("click", exportarCSV);
     document.getElementById("btnBorrarTodo").addEventListener("click", borrarTodo);
 
-    // Atajos globales
+    // Atajos globales: Ctrl+Shift+L y Ctrl+Q
     window.addEventListener("keydown", (e) => {
+      // Bloqueo Ctrl+Shift+L
+      if (e.ctrlKey && e.shiftKey && e.key && e.key.toLowerCase() === "l") {
+        const activo = document.activeElement;
+        if (activo && (activo.type === "text" || activo.type === "date")) {
+          alternarBloqueo(activo.id);
+          showMessage('success','Bloqueo alternado en campo activo');
+        }
+        e.preventDefault();
+        return;
+      }
       // Guardar Ctrl+Q
       if (e.ctrlKey && !e.altKey && e.key && e.key.toLowerCase() === "q") {
         e.preventDefault();
