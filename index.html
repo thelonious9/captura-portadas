@@ -1,161 +1,616 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>Sistema de Captura de Planas de Hidalgo</title>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Sistema de Captura de Planas</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  
+
   <style>
-    /* ------------------------------------------------ */
-    /* ESTILOS BASE                                     */
-    /* ------------------------------------------------ */
-    :root {
-      --color-fondo-pagina: #2c3e50;
-      --color-fondo-form: #34495e;
-      --color-primary: #e74c3c;
-      --color-primary-hover: #c0392b; 
-      --color-secondary: #3498db;
-      --color-secondary-hover: #2980b9; 
-      --color-danger: #9b59b6;
-      --color-danger-hover: #8e44ad; 
-      --color-light-text: #ecf0f1;
-      --color-dark-text: #2c3e50;
-      --color-input-bg: #ecf0f1;
-      --color-alerta-vacio: #f1c40f;
-      --radius: 5px;
+    :root{
+      --color-fondo-pagina:#2c3e50; --color-fondo-form:#34495e;
+      --color-primary:#e74c3c; --color-primary-hover:#c0392b;
+      --color-secondary:#3498db; --color-secondary-hover:#2980b9;
+      --color-danger:#9b59b6; --color-danger-hover:#8e44ad;
+      --color-success:#2ecc71; --color-error:#e74c3c;
+      --color-light-text:#ecf0f1; --radius:6px;
     }
-    body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: var(--color-fondo-pagina);
-      color: var(--color-light-text);
-      line-height: 1.6;
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;margin:0;padding:20px;background:var(--color-fondo-pagina);color:var(--color-light-text);}
+    header{display:flex;justify-content:center;padding:10px;margin-bottom:16px;background:var(--color-fondo-form);border-radius:var(--radius);}
+    .alerts{margin:12px 0;}
+    .alert{padding:10px;border-radius:var(--radius);margin-bottom:6px;font-weight:600;}
+    .alert-success{background:var(--color-success);color:#fff;}
+    .alert-error{background:var(--color-error);color:#fff;}
+
+    form{
+      display:grid;grid-template-columns:auto 1fr auto 1fr;
+      gap:14px 20px;padding:20px;background:var(--color-fondo-form);
+      border-radius:var(--radius);
     }
-    .container { max-width: 1000px; margin: 0 auto; }
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: var(--color-light-text);
-      border-bottom: 2px solid var(--color-primary);
-      padding-bottom: 10px;
+    label{font-weight:700;align-self:center;}
+    .campo{display:flex;align-items:center;gap:8px;position:relative;}
+    .campo input[type="text"], .campo input[type="date"]{
+      flex:1;padding:9px;border:1px solid #7f8c8d;border-radius:var(--radius);
+      background:#fff;color:#000;
     }
-    /* … aquí siguen todos tus estilos de formulario, tabla y responsive … */
+    .btn-dropdown{padding:8px 10px;border:none;border-radius:var(--radius);background:var(--color-secondary);color:#fff;cursor:pointer;}
+    .btn-dropdown:hover{background:var(--color-secondary-hover);}
+    .bloqueado{background:#e9e9e9!important;cursor:not-allowed;}
+
+    .sugerencias{
+      position:absolute;top:100%;left:0;width:100%;
+      border:1px solid var(--color-secondary);background:#fff;color:#000;
+      max-height:220px;overflow-y:auto;z-index:100;border-radius:var(--radius);
+      box-shadow:0 4px 8px rgba(0,0,0,0.15);
+    }
+    .sugerencia{padding:8px;cursor:pointer;}
+    .sugerencia:hover,.sugerencia.resaltado{background:#f0f0f0;}
+
+    .button-group-form{grid-column:1/span 4;display:flex;gap:14px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
+    button{padding:10px 14px;border:none;border-radius:var(--radius);cursor:pointer;font-weight:700;color:#fff;}
+    #btnGuardar{background:var(--color-primary);} #btnGuardar:hover{background:var(--color-primary-hover);}
+    #btnLimpiar{background:var(--color-secondary);} #btnLimpiar:hover{background:var(--color-secondary-hover);}
+    #btnExportar{background:#16a085;} #btnExportar:hover{background:#1abc9c;}
+    #btnBorrarTodo{background:var(--color-danger);} #btnBorrarTodo:hover{background:var(--color-danger-hover);}
+
+    #buscador{width:100%;max-width:420px;padding:9px;border:1px solid #7f8c8d;border-radius:var(--radius);background:#fff;color:#000;}
+
+    table{border-collapse:collapse;width:100%;margin-top:10px;background:var(--color-fondo-form);table-layout:fixed;}
+    th,td{padding:10px;border:1px solid #7f8c8d;text-align:left;color:var(--color-light-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    th{background:var(--color-primary);cursor:pointer;position:sticky;top:0;}
+    #tablaNotas th:nth-child(4), #tablaNotas td:nth-child(4){max-width:380px;}
+    .btn-accion{padding:6px 10px;background:var(--color-secondary);border-radius:var(--radius);color:#fff;}
+    .btn-accion:hover{background:var(--color-secondary-hover);}
+
+    @media (max-width:768px){
+      form{grid-template-columns:auto 1fr;}
+      .button-group-form{grid-column:1/span 2;}
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1>Captura de Planas de Periódicos</h1>
 
-  <div id="errorCargaCSV" class="error-carga" style="display: none;">
-      ⚠️ Error al cargar archivos CSV (Medio, Recurso, etc.). ⚠️
-      <br>
-      Esto sucede si abre el archivo HTML directamente desde su computadora (`file:///...`) debido a restricciones de seguridad del navegador (CORS).
-      <br><br>
-      SOLUCIÓN: Suba este archivo HTML a GitHub Pages o use un servidor web local.
+<header><h1>Captura de Planas de Periódicos</h1></header>
+<div class="alerts" id="alerts"></div>
+
+<form id="formCaptura" onsubmit="event.preventDefault()">
+  <label for="fecha">Fecha:</label>
+  <div class="campo">
+    <input type="date" id="fecha" required>
+    <button type="button" class="btn-dropdown" data-for="fecha" tabindex="-1">🔽</button>
+    <input type="checkbox" id="lock-fecha" tabindex="-1"><label for="lock-fecha" tabindex="-1">🔒</label>
+    <div id="sugFecha" class="sugerencias" hidden></div>
   </div>
-  <form id="formCaptura" onsubmit="event.preventDefault()">
-    <!-- Campos: Usuario, Fecha, Medio, Titular, Recurso, Dependencia, Organismo, Tema, Estatus -->
-    <!-- Cada campo con su input, botón de sugerencias y checkbox de bloqueo -->
-    <!-- … aquí va todo tu formulario tal como lo tenías … -->
 
-    <div class="button-group-form">
-      <button type="button" id="btnGuardar"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
-      <button type="button" id="btnEliminarNota" onclick="borrarNota()"><i class="fa-solid fa-trash-can"></i> Borrar Nota</button>
-      <button type="button" id="btnLimpiar" onclick="limpiarFormulario()"><i class="fa-solid fa-broom"></i> Limpiar</button>
-    </div>
-  </form>
-
-  <div class="button-group-table">
-    <button id="btnExportar" onclick="exportarCSV()"><i class="fa-solid fa-download"></i> Exportar CSV</button>
-    <button id="btnBorrarTodo" onclick="borrarTodo()"><i class="fa-solid fa-skull-crossbones"></i> BORRAR TODO</button>
+  <label for="medio">Medio:</label>
+  <div class="campo">
+    <input type="text" id="medio" autocomplete="off" required>
+    <button type="button" class="btn-dropdown" data-for="medio" tabindex="-1">🔽</button>
+    <input type="checkbox" id="lock-medio" tabindex="-1"><label for="lock-medio" tabindex="-1">🔒</label>
+    <div id="sugMedio" class="sugerencias" hidden></div>
   </div>
-  
-  <hr>
 
-  <h2>Registros Capturados</h2>
-  
-  <table id="tablaNotas">
-    <thead>
-      <tr>
-        <th>#</th><th>Usuario</th><th>Fecha</th><th>Medio</th><th>Titular</th>
-        <th>Recurso editorial</th><th>Dependencia</th><th>Organismo</th>
-        <th>Tema</th><th>Estatus</th><th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <label for="titular">Titular:</label>
+  <div class="campo" style="grid-column:2/span 3;">
+    <input type="text" id="titular" autocomplete="off" required>
+    <input type="checkbox" id="lock-titular" tabindex="-1"><label for="lock-titular" tabindex="-1">🔒</label>
+    <div id="sugTitular" class="sugerencias" hidden></div>
+  </div>
+
+  <label for="recurso">Recurso editorial:</label>
+  <div class="campo">
+    <input type="text" id="recurso" autocomplete="off" required>
+    <button type="button" class="btn-dropdown" data-for="recurso" tabindex="-1">🔽</button>
+    <input type="checkbox" id="lock-recurso" tabindex="-1"><label for="lock-recurso" tabindex="-1">🔒</label>
+    <div id="sugRecurso" class="sugerencias" hidden></div>
+  </div>
+
+  <label for="dependencia">Dependencia:</label>
+  <div class="campo">
+    <input type="text" id="dependencia" autocomplete="off" required>
+    <button type="button" class="btn-dropdown" data-for="dependencia" tabindex="-1">🔽</button>
+    <input type="checkbox" id="lock-dependencia" tabindex="-1"><label for="lock-dependencia" tabindex="-1">🔒</label>
+    <div id="sugDependencia" class="sugerencias" hidden></div>
+  </div>
+
+  <label for="organismo">Organismo:</label>
+  <div class="campo">
+    <input type="text" id="organismo" autocomplete="off" required>
+    <button type="button" class="btn-dropdown" data-for="organismo" tabindex="-1">🔽</button>
+    <input type="checkbox" id="lock-organismo" tabindex="-1"><label for="lock-organismo" tabindex="-1">🔒</label>
+    <div id="sugOrganismo" class="sugerencias" hidden></div>
+  </div>
+
+  <label for="tema">Tema:</label>
+  <div class="campo">
+    <input type="text" id="tema" autocomplete="off">
+    <button type="button" class="btn-dropdown" data-for="tema" tabindex="-1">🔽</button>
+    <input type="checkbox" id="lock-tema" tabindex="-1"><label for="lock-tema" tabindex="-1">🔒</label>
+    <div id="sugTema" class="sugerencias" hidden></div>
+  </div>
+
+  <label for="estatus">Estatus:</label>
+  <div class="campo">
+    <input type="text" id="estatus" autocomplete="off" required>
+    <button type="button" class="btn-dropdown" data-for="estatus" tabindex="-1">🔽</button>
+    <input type="checkbox" id="lock-estatus" tabindex="-1"><label for="lock-estatus" tabindex="-1">🔒</label>
+    <div id="sugEstatus" class="sugerencias" hidden></div>
+  </div>
+
+  <div class="button-group-form">
+    <button type="button" id="btnGuardar"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+    <button type="button" id="btnLimpiar"><i class="fa-solid fa-broom"></i> Limpiar</button>
+    <button type="button" id="btnExportar"><i class="fa-solid fa-download"></i> Exportar CSV</button>
+    <button type="button" id="btnBorrarTodo"><i class="fa-solid fa-skull-crossbones"></i> BORRAR TODO</button>
+  </div>
+</form>
+
+<div class="buscador-container">
+  <input type="text" id="buscador" placeholder="Buscar en la tabla...">
 </div>
+
+<h2>Registros capturados</h2>
+<table id="tablaNotas">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Fecha</th>
+      <th>Medio</th>
+      <th>Titular</th>
+      <th>Recurso editorial</th>
+      <th>Dependencia</th>
+      <th>Organismo</th>
+      <th>Tema</th>
+      <th>Estatus</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 <script>
-    // ======================================================================
-    // 🟢 CONFIGURACIÓN DE URLS DE GITHUB (FORMATO RAW) 🟢
-    // ======================================================================
-    const urls = {
-        medio: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Medio.csv",
-        recurso: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Recurso.csv", // ← corregido
-        dependencia: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Dependencia.csv",
-        tema: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Tema.csv",
-        estatus: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Estatus.csv"
-    };
+  // Estado global claro
+  const urls = {
+    medio: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Medio.csv",
+    recurso: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Recurso.csv",
+    dependencia: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Dependencia.csv",
+    tema: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Tema.csv",
+    estatus: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Estatus.csv"
+  };
+  window.notas = [];
+  window.nextOrdenCaptura = 1;
+  window.filaEnEdicion = null;
+  const listas = { medio: [], recurso: [], organismoMap: {}, tema: [], estatus: [] };
 
-    // ======================================================================
-    // 🌟 CONSTANTES GLOBALES Y ESTRUCTURA DE DATOS 🌟
-    // ======================================================================
-    const camposDeDatos = ['ordenCaptura','usuario','fecha','medio','titular','recurso','dependencia','organismo','tema','estatus'];
-    const encabezadosTabla = { ordenCaptura:'#', usuario:'Usuario', fecha:'Fecha', medio:'Medio', titular:'Titular', recurso:'Recurso editorial', dependencia:'Dependencia', organismo:'Organismo', tema:'Tema', estatus:'Estatus' };
-    const camposObligatorios = camposDeDatos.filter(c => c !== 'ordenCaptura' && c !== 'tema');
+  // Alertas
+  function showMessage(type, text, timeout=2500){
+    const alerts = document.getElementById('alerts');
+    const div = document.createElement('div');
+    div.className = `alert ${type === 'success' ? 'alert-success' : 'alert-error'}`;
+    div.textContent = text;
+    alerts.appendChild(div);
+    setTimeout(()=>{ div.remove(); }, timeout);
+  }
 
-    let notas = [];
-    let nextOrdenCaptura = 1;
-    let filaEnEdicion = null;
-    let dependenciaMap = {}; 
-    let listasAutocompletado = {}; 
+  // Navegación: solo inputs de texto/fecha, saltando bloqueados
+  function moverFocoSiguiente(actual, irAtras=false) {
+    const form = document.getElementById("formCaptura");
+    const focusables = Array.from(form.querySelectorAll('input[type="text"], input[type="date"]'))
+      .filter(el => !el.readOnly && !el.disabled);
+    const idx = focusables.indexOf(actual);
+    if (idx === -1) return;
+    let next = irAtras ? idx - 1 : idx + 1;
+    if (next < 0) next = focusables.length - 1;
+    if (next >= focusables.length) next = 0;
+    focusables[next].focus();
+  }
 
-    // ======================================================================
-    // ---------------------- Carga y Procesamiento CSV ---------------------
-    // ======================================================================
-    async function cargarCSV(url) {
-        try {
-            const response = await fetch(url + '?t=' + Date.now()); 
-            if (!response.ok) throw new Error(`Fallo en la carga del CSV (Status: ${response.status})`); 
-            return await response.text();
-        } catch (error) {
-            console.error(`Error al cargar ${url}:`, error);
-            document.getElementById("errorCargaCSV").style.display = 'block';
-            throw error;
+  // Bloqueo
+  function alternarBloqueo(id) {
+    const campo = document.getElementById(id);
+    campo.readOnly = !campo.readOnly;
+    campo.classList.toggle("bloqueado", campo.readOnly);
+  }
+
+  // CSV helpers
+  async function cargarCSV(url) {
+    try {
+      const res = await fetch(url + "?t=" + Date.now());
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const texto = await res.text();
+      return texto.split("\n").map(l => l.split(","));
+    } catch (e) {
+      showMessage('error', 'No se pudo cargar: ' + url);
+      return [];
+    }
+  }
+  function limpiarFilasCSV(filas) {
+    if (!filas || filas.length === 0) return [];
+    if (filas[0] && filas[0][0]) filas[0][0] = filas[0][0].replace(/^\uFEFF/, "");
+    const encabezado = (filas[0] || []).map(c => (c || "").toLowerCase()).join(",");
+    const tieneEncabezado = /medio|recurso|dependencia|organismo|tema|estatus/.test(encabezado);
+    if (tieneEncabezado) filas = filas.slice(1);
+    return filas.map(r => r.map(c => (c || "").replace(/<[^>]+>/g, "").trim())).filter(r => r[0]);
+  }
+  async function cargarLista(url) {
+    const filas = limpiarFilasCSV(await cargarCSV(url));
+    return Array.from(new Set(filas.map(r => r[0]))).filter(Boolean).sort((a, b) => a.localeCompare(b, "es"));
+  }
+  async function cargarMapa(url) {
+    const filas = limpiarFilasCSV(await cargarCSV(url));
+    const map = {};
+    filas.forEach(([clave, valor]) => {
+      if (!clave) return;
+      map[clave] = map[clave] || new Set();
+      if (valor) map[clave].add(valor);
+    });
+    const mapArrays = {};
+    Object.keys(map).forEach(k => { mapArrays[k] = Array.from(map[k]).sort((a, b) => a.localeCompare(b, "es")); });
+    return { map: mapArrays };
+  }
+
+  // Fuente de sugerencias y mostrar todas
+  function sugerenciasFuente(idCampo) {
+    if (idCampo === "medio") return listas.medio;
+    if (idCampo === "recurso") return listas.recurso;
+    if (idCampo === "dependencia") return Object.keys(listas.organismoMap).sort((a,b)=>a.localeCompare(b,'es'));
+    if (idCampo === "organismo") {
+      const dep = document.getElementById("dependencia").value.trim();
+      const key = Object.keys(listas.organismoMap).find(k => k.toLowerCase() === dep.toLowerCase());
+      return key ? listas.organismoMap[key] : [];
+    }
+    if (idCampo === "tema") return listas.tema;
+    if (idCampo === "estatus") return listas.estatus;
+    return [];
+  }
+  function mostrarTodas(idCampo) {
+    const campo = document.getElementById(idCampo);
+    const contenedor = document.getElementById("sug" + idCampo.charAt(0).toUpperCase() + idCampo.slice(1));
+    const data = sugerenciasFuente(idCampo);
+    contenedor.innerHTML = "";
+    data.forEach((s) => {
+      const div = document.createElement("div");
+      div.textContent = s;
+      div.className = "sugerencia";
+      div.onclick = () => {
+        campo.value = s;
+        contenedor.hidden = true;
+        campo.focus();
+        if (idCampo === "dependencia") actualizarOrganismo();
+        moverFocoSiguiente(campo);
+      };
+      contenedor.appendChild(div);
+    });
+    contenedor.hidden = data.length === 0;
+  }
+
+  // Autocompletado con selección única y navegación
+  function setupAutocomplete(idCampo, lista, onSelect) {
+    const campo = document.getElementById(idCampo);
+    const contenedor = document.getElementById("sug" + idCampo.charAt(0).toUpperCase() + idCampo.slice(1));
+    let indice = -1;
+
+    function render() {
+      const valor = campo.value.toLowerCase().trim();
+      contenedor.innerHTML = "";
+      indice = -1;
+      const sugerencias = lista.filter(item => !valor || item.toLowerCase().includes(valor));
+      sugerencias.forEach((s, i) => {
+        const div = document.createElement("div");
+        div.textContent = s;
+        div.className = "sugerencia";
+        div.dataset.index = i;
+        div.onclick = () => { campo.value = s; contenedor.hidden = true; if (onSelect) onSelect(s); moverFocoSiguiente(campo); };
+        contenedor.appendChild(div);
+      });
+      contenedor.hidden = sugerencias.length === 0;
+    }
+
+    campo.addEventListener("input", render);
+    campo.addEventListener("focus", render);
+    campo.addEventListener("blur", () => setTimeout(() => { contenedor.hidden = true; }, 120));
+
+    campo.addEventListener("keydown", e => {
+      const items = contenedor.querySelectorAll(".sugerencia");
+
+      // Enter / Shift+Enter comporta como Tab / Shift+Tab
+      if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        if (items.length === 1) {
+          campo.value = items[0].textContent;
+          contenedor.hidden = true;
+          if (onSelect) onSelect(items[0].textContent);
         }
+        moverFocoSiguiente(campo, e.shiftKey);
+        return;
+      }
+
+      if (items.length > 0) {
+        if (e.key === "ArrowDown") { e.preventDefault(); indice = (indice + 1) % items.length; resaltar(items, indice); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); indice = (indice - 1 + items.length) % items.length; resaltar(items, indice); }
+        else if (e.key === "Tab") {
+          e.preventDefault();
+          const pick = indice >= 0 ? items[indice] : (items.length === 1 ? items[0] : null);
+          if (pick) {
+            campo.value = pick.textContent;
+            contenedor.hidden = true;
+            if (onSelect) onSelect(pick.textContent);
+          }
+          moverFocoSiguiente(campo, e.shiftKey);
+        }
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        moverFocoSiguiente(campo, e.shiftKey);
+      }
+
+      function resaltar(arr, i) { arr.forEach(el => el.classList.remove("resaltado")); arr[i].classList.add("resaltado"); }
+    });
+  }
+
+  function actualizarOrganismo() {
+    const depVal = document.getElementById("dependencia").value.trim();
+    const key = Object.keys(listas.organismoMap).find(k => k.toLowerCase() === depVal.toLowerCase());
+    const organLista = key ? listas.organismoMap[key] : [];
+    setupAutocomplete("organismo", organLista);
+  }
+
+  // Tabla
+  function renderizarTabla() {
+    const tbody = document.querySelector("#tablaNotas tbody");
+    tbody.innerHTML = "";
+    window.notas.forEach((n, idx) => {
+      const tr = document.createElement("tr");
+      const cols = [n.ordenCaptura, n.fecha, n.medio, n.titular, n.recurso, n.dependencia, n.organismo, n.tema || "", n.estatus];
+      cols.forEach((texto, i) => {
+        const td = document.createElement("td");
+        td.textContent = texto ?? "";
+        if (i === 3) td.title = texto ?? "";
+        tr.appendChild(td);
+      });
+      const tdAcciones = document.createElement("td");
+      const btnEditar = document.createElement("button");
+      btnEditar.className = "btn-accion";
+      btnEditar.textContent = "Editar";
+      btnEditar.onclick = () => editarNota(idx);
+      tdAcciones.appendChild(btnEditar);
+      tr.appendChild(tdAcciones);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function editarNota(index) {
+    const n = window.notas[index];
+    ["fecha","medio","titular","recurso","dependencia","organismo","tema","estatus"].forEach(id => {
+      document.getElementById(id).value = n[id] || "";
+    });
+    window.filaEnEdicion = index;
+    document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Actualizar nota';
+
+    let btnEliminar = document.getElementById("btnEliminarNota");
+    if (!btnEliminar) {
+      btnEliminar = document.createElement("button");
+      btnEliminar.id = "btnEliminarNota";
+      btnEliminar.className = "btn-accion";
+      btnEliminar.style.background = "#b03a2e";
+      btnEliminar.textContent = "Eliminar nota";
+      btnEliminar.onclick = () => {
+        window.notas.splice(index,1);
+        localStorage.setItem("notasPlanas", JSON.stringify(window.notas));
+        renderizarTabla();
+        document.getElementById("formCaptura").reset();
+        window.filaEnEdicion = null;
+        btnEliminar.remove();
+        document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+        showMessage('success','Nota eliminada');
+      };
+      document.querySelector(".button-group-form").appendChild(btnEliminar);
+    }
+    showMessage('success','Modo edición activado');
+  }
+
+  // Guardar (en ámbito global)
+  window.guardarRegistro = function guardarRegistro() {
+    const nuevaNota = {
+      fecha: document.getElementById("fecha").value.trim(),
+      medio: document.getElementById("medio").value.trim(),
+      titular: document.getElementById("titular").value.trim(),
+      recurso: document.getElementById("recurso").value.trim(),
+      dependencia: document.getElementById("dependencia").value.trim(),
+      organismo: document.getElementById("organismo").value.trim(),
+      tema: document.getElementById("tema").value.trim(),
+      estatus: document.getElementById("estatus").value.trim()
+    };
+    const obligatorios = ["fecha","medio","titular","recurso","dependencia","organismo","estatus"];
+    const faltantes = obligatorios.filter(k => !nuevaNota[k]);
+    if (faltantes.length) { showMessage('error','Faltan: ' + faltantes.join(', ')); return; }
+
+    if (window.filaEnEdicion !== null) {
+      nuevaNota.ordenCaptura = window.notas[window.filaEnEdicion].ordenCaptura;
+      window.notas[window.filaEnEdicion] = nuevaNota;
+      window.filaEnEdicion = null;
+      const btnEliminar = document.getElementById("btnEliminarNota");
+      if (btnEliminar) btnEliminar.remove();
+      document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+      showMessage('success','Nota actualizada');
+    } else {
+      nuevaNota.ordenCaptura = window.nextOrdenCaptura++;
+      window.notas.push(nuevaNota);
+      showMessage('success','Nota guardada');
     }
 
-    async function cargarMapa(url) {
-        const text = await cargarCSV(url);
-        const filas = text.trim().split('\n').slice(1).filter(l => l.trim());
-        const map = {};
-        const claves = new Set();
-        filas.forEach(line => {
-            const [clave, valor] = line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
-            if (clave && valor) {
-                if (!map[clave]) map[clave] = new Set();
-                map[clave].add(valor);
-                claves.add(clave);
-            }
-        });
-        const mapArrays = {};
-        Array.from(claves).sort((a, b) => a.localeCompare(b, 'es')).forEach(k => {
-            mapArrays[k] = Array.from(map[k]).sort((a, b) => a.localeCompare(b, 'es'));
-        });
-        return { claves: Array.from(claves).sort((a, b) => a.localeCompare(b, 'es')), map: mapArrays };
-    }
+    localStorage.setItem("notasPlanas", JSON.stringify(window.notas));
+    localStorage.setItem("nextOrdenCapturaPlanas", window.nextOrdenCaptura);
+    renderizarTabla();
+    document.getElementById("formCaptura").reset();
+    document.getElementById("titular").focus();
+  };
 
-    async function cargarLista(url) {
-        const text = await cargarCSV(url);
-        const filas = text.trim().split('\n').slice(1).filter(l => l.trim());
-        const lista = filas.map(line => line.split(',')[0].trim().replace(/^"|"$/g, ''));
-        return Array.from(new Set(lista)).filter(Boolean).sort((a, b) => a.localeCompare(b, 'es'));
-    }
+  // Borrar todo
+  function borrarTodo() {
+    if (!confirm("¿Borrar todas las notas? Esta acción es irreversible.")) return;
+    window.notas = [];
+    window.nextOrdenCaptura = 1;
+    localStorage.removeItem("notasPlanas");
+    localStorage.removeItem("nextOrdenCapturaPlanas");
+    renderizarTabla();
+    document.getElementById("formCaptura").reset();
+    showMessage('success','Todas las notas fueron borradas');
+  }
 
-    // … aquí siguen tus funciones de guardarNotas, cargarNotas, alternarBloqueo, setupAutocomplete, renderizarTabla, etc. …
+  // Exportar CSV
+  function exportarCSV() {
+    if (window.notas.length === 0) { showMessage('error','No hay notas para exportar'); return; }
+    const headers = ["#","Fecha","Medio","Titular","Recurso editorial","Dependencia","Organismo","Tema","Estatus"];
+    const rows = window.notas.map(n => [n.ordenCaptura, n.fecha, n.medio, n.titular, n.recurso, n.dependencia, n.organismo, n.tema || "", n.estatus]);
+    const csv = [headers].concat(rows).map(r => r.map(v => {
+      const s = (v ?? "").toString().replace(/"/g,'""');
+      return /,|\n/.test(s) ? `"${s}"` : s;
+    }).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "notas.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showMessage('success','CSV exportado');
+  }
+
+  // Buscador y ordenamiento
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'buscador') {
+      const filtro = e.target.value.toLowerCase();
+      const filas = document.querySelectorAll("#tablaNotas tbody tr");
+      filas.forEach(fila => {
+        const textoFila = fila.textContent.toLowerCase();
+        fila.style.display = textoFila.includes(filtro) ? "" : "none";
+      });
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const th = e.target.closest('#tablaNotas th');
+    if (!th) return;
+    const idx = Array.from(th.parentNode.children).indexOf(th);
+    ordenarTabla(idx);
+  });
+
+  let ordenAsc = true;
+  function ordenarTabla(colIndex) {
+    const tbody = document.querySelector("#tablaNotas tbody");
+    const filas = Array.from(tbody.querySelectorAll("tr"));
+    filas.sort((a, b) => {
+      const aText = a.children[colIndex].textContent.trim().toLowerCase();
+      const bText = b.children[colIndex].textContent.trim().toLowerCase();
+      if (!isNaN(aText) && !isNaN(bText)) return ordenAsc ? (aText - bText) : (bText - aText);
+      if (aText < bText) return ordenAsc ? -1 : 1;
+      if (aText > bText) return ordenAsc ? 1 : -1;
+      return 0;
+    });
+    ordenAsc = !ordenAsc;
+    filas.forEach(f => tbody.appendChild(f));
+  }
+
+  // Inicialización
+  async function inicializar() {
+    // Asegurar que checkboxes/labels/dropdowns no entren al ciclo de foco
+    document.querySelectorAll('.btn-dropdown, input[type="checkbox"], label[for^="lock-"]').forEach(el => el.setAttribute('tabindex','-1'));
+
+    // Botones desplegables
+    document.querySelectorAll(".btn-dropdown").forEach(btn => {
+      btn.addEventListener("click", () => mostrarTodas(btn.dataset.for));
+    });
+
+    // Cargar listas
+    listas.medio = await cargarLista(urls.medio);
+    listas.recurso = await cargarLista(urls.recurso);
+    const depData = await cargarMapa(urls.dependencia);
+    listas.organismoMap = depData.map;
+    listas.tema = await cargarLista(urls.tema);
+    listas.estatus = await cargarLista(urls.estatus);
+
+    // Autocompletados
+    setupAutocomplete("medio", listas.medio);
+    setupAutocomplete("recurso", listas.recurso);
+    setupAutocomplete("dependencia", Object.keys(listas.organismoMap).sort((a,b)=>a.localeCompare(b,'es')), actualizarOrganismo);
+    setupAutocomplete("organismo", []);
+    setupAutocomplete("tema", listas.tema);
+    setupAutocomplete("estatus", listas.estatus);
+
+    document.getElementById("dependencia").addEventListener("blur", actualizarOrganismo);
+
+    // Persistencia
+    const stored = localStorage.getItem("notasPlanas");
+    const storedNext = localStorage.getItem("nextOrdenCapturaPlanas");
+    if (storedNext) window.nextOrdenCaptura = parseInt(storedNext, 10) || 1;
+    if (stored) { try { window.notas = JSON.parse(stored) || []; } catch { window.notas = []; } }
+    renderizarTabla();
+
+    // Fecha por defecto
+    const fechaInput = document.getElementById("fecha");
+    if (!fechaInput.value) fechaInput.value = new Date().toISOString().split("T")[0];
+
+    // Botones principales
+    const btnGuardar = document.getElementById("btnGuardar");
+    btnGuardar.type = "button";
+    btnGuardar.addEventListener("click", window.guardarRegistro);
+
+    document.getElementById("btnLimpiar").addEventListener("click", () => {
+      document.getElementById("formCaptura").reset();
+      setupAutocomplete("organismo", []);
+      document.getElementById("titular").focus();
+      const btnEliminar = document.getElementById("btnEliminarNota");
+      if (btnEliminar) btnEliminar.remove();
+      document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+      window.filaEnEdicion = null;
+      showMessage('success','Formulario limpiado');
+    });
+    document.getElementById("btnExportar").addEventListener("click", exportarCSV);
+    document.getElementById("btnBorrarTodo").addEventListener("click", borrarTodo);
+
+    // Atajos globales
+    window.addEventListener("keydown", (e) => {
+      // Guardar Ctrl+Q
+      if (e.ctrlKey && !e.altKey && e.key && e.key.toLowerCase() === "q") {
+        e.preventDefault();
+        window.guardarRegistro();
+        return;
+      }
+    }, { capture: true });
+
+    document.addEventListener("keydown", (e) => {
+      // Evitar interferir con Ctrl/Alt/Meta (para no bloquear Ctrl+Q)
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+      // Tab / Shift+Tab
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const t = e.target;
+        if (t && (t.type === "text" || t.type === "date")) {
+          moverFocoSiguiente(t, e.shiftKey);
+        } else {
+          const inputs = Array.from(document.querySelectorAll('#formCaptura input[type="text"], #formCaptura input[type="date"]')).filter(el => !el.readOnly && !el.disabled);
+          if (inputs.length) inputs[0].focus();
+        }
+        return;
+      }
+
+      // Enter / Shift+Enter como Tab
+      if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+        const t = e.target;
+        const sug = t.closest(".campo")?.querySelector(".sugerencias");
+        const items = sug?.querySelectorAll(".sugerencia") || [];
+        e.preventDefault();
+        if (items.length === 1) {
+          t.value = items[0].textContent;
+          if (sug) sug.hidden = true;
+        }
+        if (t && (t.type === "text" || t.type === "date")) {
+          moverFocoSiguiente(t, e.shiftKey);
+        }
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", inicializar);
 </script>
 </body>
 </html>
