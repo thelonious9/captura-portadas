@@ -167,8 +167,9 @@
   </thead>
   <tbody></tbody>
 </table>
+
 <script>
-  // Estado global claro
+  // Estado global
   const urls = {
     medio: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Medio.csv",
     recurso: "https://raw.githubusercontent.com/thelonious9/captura-portadas/main/Recurso.csv",
@@ -191,20 +192,18 @@
     setTimeout(()=>{ div.remove(); }, timeout);
   }
 
-  // Navegación: solo inputs de texto/fecha, saltando bloqueados
+  // Navegación: incluye TODOS los inputs (bloqueados y desbloqueados)
   function moverFocoSiguiente(actual, irAtras=false) {
-    const form = document.getElementById("formCaptura");
-    const focusables = Array.from(form.querySelectorAll('input[type="text"], input[type="date"]'))
-      .filter(el => !el.readOnly && !el.disabled);
-    const idx = focusables.indexOf(actual);
+    const inputs = Array.from(document.querySelectorAll('#formCaptura input[type="text"], #formCaptura input[type="date"]'));
+    const idx = inputs.indexOf(actual);
     if (idx === -1) return;
     let next = irAtras ? idx - 1 : idx + 1;
-    if (next < 0) next = focusables.length - 1;
-    if (next >= focusables.length) next = 0;
-    focusables[next].focus();
+    if (next < 0) next = inputs.length - 1;
+    if (next >= inputs.length) next = 0;
+    inputs[next].focus();
   }
 
-  // Bloqueo (se usa en botones dropdown y atajo)
+  // Bloqueo sincronizado con checkbox
   function alternarBloqueo(id) {
     const campo = document.getElementById(id);
     campo.readOnly = !campo.readOnly;
@@ -251,6 +250,7 @@
   }
 
   // Fuente de sugerencias y mostrar todas
+  function sugId(idCampo) { return "sug" + idCampo.charAt(0).toUpperCase() + idCampo.slice(1); }
   function sugerenciasFuente(idCampo) {
     if (idCampo === "medio") return listas.medio;
     if (idCampo === "recurso") return listas.recurso;
@@ -266,7 +266,7 @@
   }
   function mostrarTodas(idCampo) {
     const campo = document.getElementById(idCampo);
-    const contenedor = document.getElementById("sug" + idCampo.charAt(0).toUpperCase() + idCampo.slice(1));
+    const contenedor = document.getElementById(sugId(idCampo));
     const data = sugerenciasFuente(idCampo);
     contenedor.innerHTML = "";
     data.forEach((s) => {
@@ -285,10 +285,10 @@
     contenedor.hidden = data.length === 0;
   }
 
-  // Autocompletado con selección única y navegación
+  // Autocompletado con flechas, Tab/Enter y selección única o resaltada
   function setupAutocomplete(idCampo, lista, onSelect) {
     const campo = document.getElementById(idCampo);
-    const contenedor = document.getElementById("sug" + idCampo.charAt(0).toUpperCase() + idCampo.slice(1));
+    const contenedor = document.getElementById(sugId(idCampo));
     let indice = -1;
 
     function render() {
@@ -301,7 +301,12 @@
         div.textContent = s;
         div.className = "sugerencia";
         div.dataset.index = i;
-        div.onclick = () => { campo.value = s; contenedor.hidden = true; if (onSelect) onSelect(s); moverFocoSiguiente(campo); };
+        div.onclick = () => {
+          campo.value = s;
+          contenedor.hidden = true;
+          if (onSelect) onSelect(s);
+          moverFocoSiguiente(campo);
+        };
         contenedor.appendChild(div);
       });
       contenedor.hidden = sugerencias.length === 0;
@@ -314,37 +319,34 @@
     campo.addEventListener("keydown", e => {
       const items = contenedor.querySelectorAll(".sugerencia");
 
-      // Enter / Shift+Enter comporta como Tab / Shift+Tab
-      if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+      if (e.key === "Enter" || e.key === "Tab") {
         e.preventDefault();
-        if (items.length === 1) {
-          campo.value = items[0].textContent;
+        let pick = null;
+        if (indice >= 0) pick = items[indice];
+        else if (items.length === 1) pick = items[0];
+        if (pick) {
+          campo.value = pick.textContent;
           contenedor.hidden = true;
-          if (onSelect) onSelect(items[0].textContent);
+          if (onSelect) onSelect(pick.textContent);
         }
         moverFocoSiguiente(campo, e.shiftKey);
         return;
       }
 
-      if (items.length > 0) {
-        if (e.key === "ArrowDown") { e.preventDefault(); indice = (indice + 1) % items.length; resaltar(items, indice); }
-        else if (e.key === "ArrowUp") { e.preventDefault(); indice = (indice - 1 + items.length) % items.length; resaltar(items, indice); }
-        else if (e.key === "Tab") {
-          e.preventDefault();
-          const pick = indice >= 0 ? items[indice] : (items.length === 1 ? items[0] : null);
-          if (pick) {
-            campo.value = pick.textContent;
-            contenedor.hidden = true;
-            if (onSelect) onSelect(pick.textContent);
-          }
-          moverFocoSiguiente(campo, e.shiftKey);
-        }
-      } else if (e.key === "Tab") {
+      if (e.key === "ArrowDown" && items.length > 0) {
         e.preventDefault();
-        moverFocoSiguiente(campo, e.shiftKey);
+        indice = (indice + 1) % items.length;
+        resaltar(items, indice);
+      } else if (e.key === "ArrowUp" && items.length > 0) {
+        e.preventDefault();
+        indice = (indice - 1 + items.length) % items.length;
+        resaltar(items, indice);
       }
 
-      function resaltar(arr, i) { arr.forEach(el => el.classList.remove("resaltado")); arr[i].classList.add("resaltado"); }
+      function resaltar(arr, i) {
+        arr.forEach(el => el.classList.remove("resaltado"));
+        arr[i].classList.add("resaltado");
+      }
     });
   }
 
@@ -355,11 +357,11 @@
     setupAutocomplete("organismo", organLista);
   }
 
-  // Tabla
+  // Tabla: última nota arriba y edición correcta
   function renderizarTabla() {
     const tbody = document.querySelector("#tablaNotas tbody");
     tbody.innerHTML = "";
-    window.notas.forEach((n, idx) => {
+    [...window.notas].slice().reverse().forEach((n, idx) => {
       const tr = document.createElement("tr");
       const cols = [n.ordenCaptura, n.fecha, n.medio, n.titular, n.recurso, n.dependencia, n.organismo, n.tema || "", n.estatus];
       cols.forEach((texto, i) => {
@@ -372,7 +374,8 @@
       const btnEditar = document.createElement("button");
       btnEditar.className = "btn-accion";
       btnEditar.textContent = "Editar";
-      btnEditar.onclick = () => editarNota(idx);
+      // Mapear índice visual (revertido) al índice real del array
+      btnEditar.onclick = () => editarNota(window.notas.length - 1 - idx);
       tdAcciones.appendChild(btnEditar);
       tr.appendChild(tdAcciones);
       tbody.appendChild(tr);
@@ -409,7 +412,7 @@
     showMessage('success','Modo edición activado');
   }
 
-  // Guardar (en ámbito global) — actualizado para limpiar solo desbloqueados y devolver foco a Titular
+  // Guardar: limpiar solo campos no bloqueados y foco a Titular
   window.guardarRegistro = function guardarRegistro() {
     const nuevaNota = {
       fecha: document.getElementById("fecha").value.trim(),
@@ -482,7 +485,26 @@
     showMessage('success','CSV exportado');
   }
 
-  // Buscador y ordenamiento
+  // Ordenamiento por columna (toggle asc/desc)
+  let ordenAsc = true;
+  function ordenarTabla(colIndex) {
+    const tbody = document.querySelector("#tablaNotas tbody");
+    const filas = Array.from(tbody.querySelectorAll("tr"));
+    filas.sort((a, b) => {
+      const aText = a.children[colIndex].textContent.trim().toLowerCase();
+      const bText = b.children[colIndex].textContent.trim().toLowerCase();
+      const aNum = parseFloat(aText); const bNum = parseFloat(bText);
+      const ambosNum = !isNaN(aNum) && !isNaN(bNum);
+      if (ambosNum) return ordenAsc ? (aNum - bNum) : (bNum - aNum);
+      if (aText < bText) return ordenAsc ? -1 : 1;
+      if (aText > bText) return ordenAsc ? 1 : -1;
+      return 0;
+    });
+    ordenAsc = !ordenAsc;
+    filas.forEach(f => tbody.appendChild(f));
+  }
+
+  // Buscador y clic en encabezados
   document.addEventListener('input', (e) => {
     if (e.target.id === 'buscador') {
       const filtro = e.target.value.toLowerCase();
@@ -493,7 +515,6 @@
       });
     }
   });
-
   document.addEventListener('click', (e) => {
     const th = e.target.closest('#tablaNotas th');
     if (!th) return;
@@ -501,25 +522,9 @@
     ordenarTabla(idx);
   });
 
-  let ordenAsc = true;
-  function ordenarTabla(colIndex) {
-    const tbody = document.querySelector("#tablaNotas tbody");
-    const filas = Array.from(tbody.querySelectorAll("tr"));
-    filas.sort((a, b) => {
-      const aText = a.children[colIndex].textContent.trim().toLowerCase();
-      const bText = b.children[colIndex].textContent.trim().toLowerCase();
-      if (!isNaN(aText) && !isNaN(bText)) return ordenAsc ? (aText - bText) : (bText - aText);
-      if (aText < bText) return ordenAsc ? -1 : 1;
-      if (aText > bText) return ordenAsc ? 1 : -1;
-      return 0;
-    });
-    ordenAsc = !ordenAsc;
-    filas.forEach(f => tbody.appendChild(f));
-  }
-
   // Inicialización
   async function inicializar() {
-    // Asegurar que checkboxes/labels/dropdowns no entren al ciclo de foco
+    // Excluir controles no editables del foco por teclado
     document.querySelectorAll('.btn-dropdown, input[type="checkbox"], label[for^="lock-"]').forEach(el => el.setAttribute('tabindex','-1'));
 
     // Botones desplegables
@@ -574,6 +579,14 @@
     document.getElementById("btnExportar").addEventListener("click", exportarCSV);
     document.getElementById("btnBorrarTodo").addEventListener("click", borrarTodo);
 
+    // Checkboxes de bloqueo sincronizadas
+    document.querySelectorAll('input[type="checkbox"][id^="lock-"]').forEach(chk => {
+      chk.addEventListener("change", () => {
+        const campoId = chk.id.replace("lock-","");
+        alternarBloqueo(campoId);
+      });
+    });
+
     // Atajos globales: Ctrl+Shift+L y Ctrl+Q
     window.addEventListener("keydown", (e) => {
       // Bloqueo Ctrl+Shift+L
@@ -594,29 +607,28 @@
       }
     }, { capture: true });
 
+    // Navegación general (Tab/Enter) respetando sugerencias
     document.addEventListener("keydown", (e) => {
-      // Evitar interferir con Ctrl/Alt/Meta (para no bloquear Ctrl+Q)
       if (e.ctrlKey || e.altKey || e.metaKey) return;
 
-      // Tab / Shift+Tab
       if (e.key === "Tab") {
         e.preventDefault();
         const t = e.target;
         if (t && (t.type === "text" || t.type === "date")) {
           moverFocoSiguiente(t, e.shiftKey);
         } else {
-          const inputs = Array.from(document.querySelectorAll('#formCaptura input[type="text"], #formCaptura input[type="date"]')).filter(el => !el.readOnly && !el.disabled);
+          const inputs = Array.from(document.querySelectorAll('#formCaptura input[type="text"], #formCaptura input[type="date"]'));
           if (inputs.length) inputs[0].focus();
         }
         return;
       }
 
-      // Enter / Shift+Enter como Tab
       if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
         const t = e.target;
         const sug = t.closest(".campo")?.querySelector(".sugerencias");
         const items = sug?.querySelectorAll(".sugerencia") || [];
         e.preventDefault();
+        // Si hay una sola sugerencia visible, selecciónala
         if (items.length === 1) {
           t.value = items[0].textContent;
           if (sug) sug.hidden = true;
