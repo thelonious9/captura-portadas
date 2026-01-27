@@ -141,6 +141,8 @@
     <button type="button" id="btnGuardar"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
     <button type="button" id="btnLimpiar"><i class="fa-solid fa-broom"></i> Limpiar</button>
     <button type="button" id="btnExportar"><i class="fa-solid fa-download"></i> Exportar CSV</button>
+    <button type="button" id="btnRecuperarDatos"><i class="fa-solid fa-database"></i> Recuperar por fecha</button>
+    <button type="button" id="btnEnviarCapturas"><i class="fa-solid fa-paper-plane"></i> Enviar capturas</button>
     <button type="button" id="btnBorrarTodo"><i class="fa-solid fa-skull-crossbones"></i> BORRAR TODO</button>
   </div>
 </form>
@@ -485,6 +487,91 @@
     showMessage('success','CSV exportado');
   }
 
+  // Recuperar datos de Sheets por fecha
+  function recuperarDatos() {
+    const fechaInput = prompt("Ingresa la fecha que deseas recuperar (YYYY-MM-DD):");
+    if (!fechaInput) return;
+    
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaInput)) {
+      showMessage('error', 'Formato de fecha inválido. Usa YYYY-MM-DD');
+      return;
+    }
+
+    showMessage('success', 'Recuperando datos de la fecha: ' + fechaInput);
+    
+    const appScriptUrl = 'https://script.google.com/macros/s/AKfycbw8VdGzfZ6exFk1dBr9CnEEJDY4xG5neRGPjo4ay_QQ-nXyYxQLDxpGWowlcOPuvFI1/exec';
+    
+    const params = new URLSearchParams();
+    params.append('action', 'fetch');
+    params.append('date', fechaInput);
+    
+    fetch(appScriptUrl, {
+      method: 'POST',
+      body: params
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success' && data.data && data.data.length > 0) {
+          const nuevosRegistros = data.data.map(reg => ({
+            fecha: reg.fecha || fechaInput,
+            medio: reg.medio || '',
+            titular: reg.titular || '',
+            recurso: reg.recurso || '',
+            dependencia: reg.dependencia || '',
+            organismo: reg.organismo || '',
+            tema: reg.tema || '',
+            estatus: reg.estatus || '',
+            ordenCaptura: window.nextOrdenCaptura++
+          }));
+          
+          window.notas.push(...nuevosRegistros);
+          localStorage.setItem("notasPlanas", JSON.stringify(window.notas));
+          localStorage.setItem("nextOrdenCapturaPlanas", window.nextOrdenCaptura);
+          renderizarTabla();
+          showMessage('success', `Se recuperaron ${nuevosRegistros.length} registros`);
+        } else {
+          showMessage('error', 'No se encontraron registros para esa fecha');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        showMessage('error', 'Error: ' + err.message);
+      });
+  }
+
+  // Enviar capturas recientes
+  function enviarCapturas() {
+    if (window.notas.length === 0) {
+      showMessage('error', 'No hay capturas para enviar');
+      return;
+    }
+
+    const cantidad = window.notas.length;
+    showMessage('success', `Enviando ${cantidad} captura${cantidad > 1 ? 's' : ''}...`);
+    
+    const appScriptUrl = 'https://script.google.com/macros/s/AKfycbw8VdGzfZ6exFk1dBr9CnEEJDY4xG5neRGPjo4ay_QQ-nXyYxQLDxpGWowlcOPuvFI1/exec';
+    
+    const params = new URLSearchParams();
+    params.append('action', 'send');
+    params.append('data', JSON.stringify(window.notas));
+    
+    fetch(appScriptUrl, {
+      method: 'POST',
+      body: params
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          showMessage('success', `✅ ${data.rowsAdded || cantidad} fila${data.rowsAdded > 1 ? 's' : ''} enviada${data.rowsAdded > 1 ? 's' : ''} a Sheets`);
+        } else {
+          showMessage('error', `❌ ${data.message || 'Error al enviar'}`);
+        }
+      })
+      .catch(err => {
+        showMessage('error', `Error: ${err.message}`);
+      });
+  }
+
   // Ordenamiento por columna (toggle asc/desc)
   let ordenAsc = true;
   function ordenarTabla(colIndex) {
@@ -577,6 +664,8 @@
       showMessage('success','Formulario limpiado');
     });
     document.getElementById("btnExportar").addEventListener("click", exportarCSV);
+    document.getElementById("btnRecuperarDatos").addEventListener("click", recuperarDatos);
+    document.getElementById("btnEnviarCapturas").addEventListener("click", enviarCapturas);
     document.getElementById("btnBorrarTodo").addEventListener("click", borrarTodo);
 
     // Checkboxes de bloqueo sincronizadas
