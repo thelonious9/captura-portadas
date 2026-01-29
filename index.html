@@ -859,7 +859,7 @@
         });
       });
 
-      // Atajos globales: Ctrl+Shift+L y Ctrl+Q
+      // Atajos globales: Ctrl+Shift+L, Ctrl+Q y Ctrl+Delete
       window.addEventListener("keydown", (e) => {
         // Bloqueo Ctrl+Shift+L
         if (e.ctrlKey && e.shiftKey && e.key && e.key.toLowerCase() === "l") {
@@ -875,6 +875,25 @@
         if (e.ctrlKey && !e.altKey && e.key && e.key.toLowerCase() === "q") {
           e.preventDefault();
           window.guardarRegistro();
+          return;
+        }
+        // Desbloquear y Borrar Ctrl+Delete
+        if (e.ctrlKey && e.key === "Delete") {
+          const activo = document.activeElement;
+          if (activo && (activo.type === "text" || activo.type === "date")) {
+            // Si está bloqueado (readOnly), desbloquearlo
+            if (activo.readOnly) {
+              alternarBloqueo(activo.id);
+            }
+            // Borrar contenido
+            activo.value = "";
+            // Si es 'dependencia', también limpiar autocompletado de 'organismo'
+            if (activo.id === "dependencia") {
+              actualizarOrganismo();
+            }
+            showMessage('success', 'Campo desbloqueado y borrado');
+          }
+          e.preventDefault();
           return;
         }
       }, { capture: true });
