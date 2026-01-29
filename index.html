@@ -185,6 +185,42 @@
       background: var(--color-danger-hover);
     }
 
+    #btnRecuperarDatos {
+      background: #f39c12;
+      /* Naranja/Ámbar */
+    }
+
+    #btnRecuperarDatos:hover {
+      background: #d35400;
+    }
+
+    #btnEnviarCapturas {
+      background: #2c3e50;
+      /* Azul muy oscuro/Charcoal para contraste */
+      border: 1px solid #7f8c8d;
+    }
+
+    #btnEnviarCapturas:hover {
+      background: #1a252f;
+    }
+
+    .preset-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      justify-content: flex-start;
+    }
+
+    .btn-preset {
+      background: #7f8c8d;
+      font-size: 0.9em;
+      padding: 6px 12px;
+    }
+
+    .btn-preset:hover {
+      background: #95a5a6;
+    }
+
     #buscador {
       width: 100%;
       max-width: 420px;
@@ -255,6 +291,13 @@
     <h1>Captura de Planas de Periódicos</h1>
   </header>
   <div class="alerts" id="alerts"></div>
+
+  <div class="preset-group">
+    <button type="button" class="btn-preset" id="btnPresetDeportes"><i class="fa-solid fa-puck-lines"></i>
+      Deportes</button>
+    <button type="button" class="btn-preset" id="btnPresetVarios"><i class="fa-solid fa-layer-group"></i>
+      Varios</button>
+  </div>
 
   <form id="formCaptura" onsubmit="event.preventDefault()">
     <label for="fecha">Fecha:</label>
@@ -850,6 +893,27 @@
       document.getElementById("btnRecuperarDatos").addEventListener("click", recuperarDatos);
       document.getElementById("btnEnviarCapturas").addEventListener("click", enviarCapturas);
       document.getElementById("btnBorrarTodo").addEventListener("click", borrarTodo);
+
+      // Botones de prellenado
+      document.getElementById("btnPresetDeportes").addEventListener("click", () => {
+        document.getElementById("dependencia").value = "Otros";
+        document.getElementById("organismo").value = "Otros";
+        document.getElementById("tema").value = "Deportes";
+        document.getElementById("estatus").value = "Informativa";
+        actualizarOrganismo();
+        showMessage('success', 'Campos de Deportes prellenados');
+        document.getElementById("titular").focus();
+      });
+
+      document.getElementById("btnPresetVarios").addEventListener("click", () => {
+        document.getElementById("dependencia").value = "Otros";
+        document.getElementById("organismo").value = "Otros";
+        document.getElementById("tema").value = "Temas varios";
+        document.getElementById("estatus").value = "Informativa";
+        actualizarOrganismo();
+        showMessage('success', 'Campos Varios prellenados');
+        document.getElementById("titular").focus();
+      });
 
       // Checkboxes de bloqueo sincronizadas
       document.querySelectorAll('input[type="checkbox"][id^="lock-"]').forEach(chk => {
