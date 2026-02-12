@@ -6,8 +6,8 @@ Ayuntamiento,Obras públicas
 Ayuntamiento,Policía municipal
 Ayuntamiento,Regidor
 Ayuntamiento,Exalcalde
+Congreso, Congreso
 Congreso,ASEH
-Congreso,Congreso
 Congreso,GLMorena
 Congreso,GLPRI
 Congreso,GLPAN
@@ -173,6 +173,9 @@ Presidencia,Medio ambiente
 Presidencia,IMPI
 Presidencia,IMSS
 Presidencia,ISSSTE
+Presidencia,Procuraduría Agraria
+Presidencia,Infonavit
+Presidencia,Ejército
 PRI,Titular
 PRI,PRI
 PAN,PAN
@@ -189,7 +192,13 @@ Gabinete social,Gabinete social
 Aspirantes,Simey
 Aspirantes,Ochoa
 CDHEH,CDHEH
-CDHEH,Titular
-PGJEH, Fiscalía de Género
-PGJEH, Fiscalía Anticorrupción
-Aspirantes, Susana Ángeles
+CDHEHTitular
+PGJEH,Fiscalía de Género
+PGJEH,Fiscalía Anticorrupción
+Aspirantes,Susana Ángeles
+Presidencia,Infonavit
+Espacio Hidalgo,Espacio Hidalgo
+PES, PES
+MC,MC
+MC,Titular
+Semarnath,Simaeh
