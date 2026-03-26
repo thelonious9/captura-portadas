@@ -1,27 +1,46 @@
+:root {
+  --color-primary: #15173D;
+  --color-bg: #fcfcfc;
+  --color-form-bg: #ffffff;
+  --color-border: #15173D;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
-  padding: 20px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: var(--color-bg);
+  padding: 40px;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
 }
 
 .container {
   max-width: 900px;
   margin: 0 auto;
-  background: white;
-  padding: 25px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  background: var(--color-form-bg);
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 h1 {
-  text-align: center;
-  margin-bottom: 25px;
+  text-align: left;
+  margin: 0 0 10px 0;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+}
+
+.header-banner {
+  border-top: 5px solid var(--color-primary);
+  border-bottom: 5px solid var(--color-primary);
+  padding: 20px 0;
+  margin-bottom: 30px;
 }
 
 .form-row {
   display: flex;
   gap: 20px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-col {
@@ -30,16 +49,27 @@ h1 {
 
 label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   font-weight: bold;
+  font-size: 1.1em;
 }
 
 input, textarea, select {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 12px;
+  border: 2px solid var(--color-border);
+  border-radius: 0;
   box-sizing: border-box;
+  background: #fff;
+  color: var(--color-primary);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+input:focus, textarea:focus, select:focus {
+  background-color: var(--color-primary);
+  color: #fff;
+  outline: none;
 }
 
 textarea {
@@ -47,16 +77,20 @@ textarea {
 }
 
 button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
+  background-color: transparent;
+  color: var(--color-primary);
+  padding: 12px 20px;
+  border: 2px solid var(--color-primary);
+  border-radius: 0;
   cursor: pointer;
   width: 100%;
   font-size: 16px;
+  font-weight: bold;
+  font-family: inherit;
+  transition: all 0.2s;
 }
 
 button:hover {
-  background-color: #0056b3;
-}
+  background-color: var(--color-primary);
+  color: #fff;
+}
