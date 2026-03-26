@@ -50,7 +50,7 @@
       letter-spacing: -1.5px;
       color: var(--color-text);
     }
-    
+
     header h1::after {
       content: '®';
       font-size: 1.5rem;
@@ -85,15 +85,42 @@
       position: absolute;
       top: -15px;
     }
-    
-    .art-circle:nth-child(1) { left: calc(50% - 225px); }
-    .art-circle:nth-child(2) { left: calc(50% - 75px); }
-    .art-circle:nth-child(3) { left: calc(50% + 75px); }
 
-    .alerts { margin: 12px 0; }
-    .alert { padding: 10px; border-radius: var(--radius); margin-bottom: 6px; font-weight: 600; border: 1px solid currentColor; }
-    .alert-success { background: #fff; color: var(--color-primary); border-color: var(--color-primary); }
-    .alert-error { background: #fff; color: var(--color-error); border-color: var(--color-error); }
+    .art-circle:nth-child(1) {
+      left: calc(50% - 225px);
+    }
+
+    .art-circle:nth-child(2) {
+      left: calc(50% - 75px);
+    }
+
+    .art-circle:nth-child(3) {
+      left: calc(50% + 75px);
+    }
+
+    .alerts {
+      margin: 12px 0;
+    }
+
+    .alert {
+      padding: 10px;
+      border-radius: var(--radius);
+      margin-bottom: 6px;
+      font-weight: 600;
+      border: 1px solid currentColor;
+    }
+
+    .alert-success {
+      background: #fff;
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    .alert-error {
+      background: #fff;
+      color: var(--color-error);
+      border-color: var(--color-error);
+    }
 
     form {
       display: grid;
@@ -132,7 +159,7 @@
       font-size: 1rem;
       outline: none;
     }
-    
+
     .campo input[type="text"]:focus,
     .campo input[type="date"]:focus {
       background-color: var(--color-text);
@@ -148,7 +175,7 @@
       cursor: pointer;
       font-weight: bold;
     }
-    
+
     .btn-dropdown:hover {
       background: var(--color-text);
       color: #fff;
@@ -176,8 +203,17 @@
       border-top: none;
     }
 
-    .sugerencia { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #eee; }
-    .sugerencia:hover, .sugerencia.resaltado { background: var(--color-text); color: #fff; }
+    .sugerencia {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    .sugerencia:hover,
+    .sugerencia.resaltado {
+      background: var(--color-text);
+      color: #fff;
+    }
 
     .button-group-form {
       grid-column: 1/span 4;
@@ -204,9 +240,15 @@
       transition: all 0.2s;
     }
 
-    button:hover { background: var(--color-text); color: #fff; }
-    
-    #btnGuardar, #btnExportar, #btnRecuperarDatos, #btnEnviarCapturas {
+    button:hover {
+      background: var(--color-text);
+      color: #fff;
+    }
+
+    #btnGuardar,
+    #btnExportar,
+    #btnRecuperarDatos,
+    #btnEnviarCapturas {
       background: transparent;
     }
 
@@ -214,7 +256,7 @@
       border-color: var(--color-error);
       color: var(--color-error);
     }
-    
+
     #btnBorrarTodo:hover {
       background: var(--color-error);
       color: #fff;
@@ -227,10 +269,15 @@
       justify-content: flex-start;
     }
 
-    .btn-preset { font-size: 0.9em; padding: 8px 14px; }
+    .btn-preset {
+      font-size: 0.9em;
+      padding: 8px 14px;
+    }
 
-    .buscador-container { margin: 30px 0 10px; }
-    
+    .buscador-container {
+      margin: 30px 0 10px;
+    }
+
     #buscador {
       width: 100%;
       max-width: 420px;
@@ -242,7 +289,7 @@
       font-family: inherit;
       font-size: 1rem;
     }
-    
+
     #buscador:focus {
       background: var(--color-text);
       color: #fff;
@@ -280,7 +327,8 @@
       margin-top: 0;
     }
 
-    th, td {
+    th,
+    td {
       padding: 12px 10px;
       border: 1px solid var(--color-border);
       text-align: left;
@@ -302,7 +350,10 @@
       letter-spacing: 0px;
     }
 
-    #tablaNotas th:nth-child(4), #tablaNotas td:nth-child(4) { max-width: 380px; }
+    #tablaNotas th:nth-child(4),
+    #tablaNotas td:nth-child(4) {
+      max-width: 380px;
+    }
 
     .btn-accion {
       padding: 6px 12px;
@@ -313,32 +364,63 @@
       font-size: 0.85rem;
     }
 
-    .btn-accion:hover { background: var(--color-text); color: #fff; }
+    .btn-accion:hover {
+      background: var(--color-text);
+      color: #fff;
+    }
 
     @media (max-width: 1024px) {
-      form { grid-template-columns: auto 1fr; }
-      .campo-titular { grid-column: auto; }
-      .button-group-form { grid-column: 1 / span 2; }
+      form {
+        grid-template-columns: auto 1fr;
+      }
+
+      .campo-titular {
+        grid-column: auto;
+      }
+
+      .button-group-form {
+        grid-column: 1 / span 2;
+      }
     }
 
     @media (max-width: 768px) {
-      form { 
-        grid-template-columns: 1fr; 
+      form {
+        grid-template-columns: 1fr;
       }
-      .campo-titular { grid-column: auto; }
-      .button-group-form { 
-        grid-column: 1; 
-        flex-direction: column; 
+
+      .campo-titular {
+        grid-column: auto;
+      }
+
+      .button-group-form {
+        grid-column: 1;
+        flex-direction: column;
         gap: 10px;
       }
+
       label {
         margin-bottom: -10px;
       }
-      body { padding: 20px; }
-      header h1 { font-size: 2.2rem; }
-      header p { font-size: 1.1rem; }
-      .art-box { display: none; }
-      .preset-group { flex-direction: column; }
+
+      body {
+        padding: 20px;
+      }
+
+      header h1 {
+        font-size: 2.2rem;
+      }
+
+      header p {
+        font-size: 1.1rem;
+      }
+
+      .art-box {
+        display: none;
+      }
+
+      .preset-group {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -346,7 +428,7 @@
 <body>
 
   <header>
-    <h1>Captura de Planas</h1>
+    <h1>Captura de Primeras Planas</h1>
     <p>Ladies and gentlemen we are floating in space</p>
   </header>
   <div class="art-box">
