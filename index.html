@@ -26,7 +26,8 @@
 
     body {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      margin: 0;
+      margin: 0 auto;
+      max-width: 1440px;
       padding: 40px;
       background: var(--color-fondo-pagina);
       color: var(--color-text);
@@ -113,6 +114,10 @@
       align-items: center;
       gap: 8px;
       position: relative;
+    }
+
+    .campo-titular {
+      grid-column: 2 / span 3;
     }
 
     .campo input[type="text"],
@@ -256,13 +261,23 @@
       color: var(--color-text);
     }
 
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 10px;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius);
+    }
+
     table {
       border-collapse: collapse;
       width: 100%;
-      margin-top: 10px;
+      min-width: 900px;
       background: #fff;
       table-layout: fixed;
-      border: 2px solid var(--color-border);
+      border: none;
+      margin-top: 0;
     }
 
     th, td {
@@ -300,12 +315,30 @@
 
     .btn-accion:hover { background: var(--color-text); color: #fff; }
 
-    @media (max-width:768px) {
+    @media (max-width: 1024px) {
       form { grid-template-columns: auto 1fr; }
-      .button-group-form { grid-column: 1/span 2; }
+      .campo-titular { grid-column: auto; }
+      .button-group-form { grid-column: 1 / span 2; }
+    }
+
+    @media (max-width: 768px) {
+      form { 
+        grid-template-columns: 1fr; 
+      }
+      .campo-titular { grid-column: auto; }
+      .button-group-form { 
+        grid-column: 1; 
+        flex-direction: column; 
+        gap: 10px;
+      }
+      label {
+        margin-bottom: -10px;
+      }
       body { padding: 20px; }
-      header h1 { font-size: 2.5rem; }
+      header h1 { font-size: 2.2rem; }
+      header p { font-size: 1.1rem; }
       .art-box { display: none; }
+      .preset-group { flex-direction: column; }
     }
   </style>
 </head>
@@ -348,7 +381,7 @@
     </div>
 
     <label for="titular">Titular:</label>
-    <div class="campo" style="grid-column:2/span 3;">
+    <div class="campo campo-titular">
       <input type="text" id="titular" autocomplete="off" required>
       <input type="checkbox" id="lock-titular" tabindex="-1"><label for="lock-titular" tabindex="-1">🔒</label>
       <div id="sugTitular" class="sugerencias" hidden></div>
@@ -409,23 +442,25 @@
   </div>
 
   <h2>Registros capturados</h2>
-  <table id="tablaNotas">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Fecha</th>
-        <th>Medio</th>
-        <th>Titular</th>
-        <th>Recurso editorial</th>
-        <th>Dependencia</th>
-        <th>Organismo</th>
-        <th>Tema</th>
-        <th>Estatus</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="table-responsive">
+    <table id="tablaNotas">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Fecha</th>
+          <th>Medio</th>
+          <th>Titular</th>
+          <th>Recurso editorial</th>
+          <th>Dependencia</th>
+          <th>Organismo</th>
+          <th>Tema</th>
+          <th>Estatus</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script>
     // Estado global
