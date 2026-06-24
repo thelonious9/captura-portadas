@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Primeras Planas</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/alasql@4"></script>
 
   <style>
     :root {
@@ -296,6 +297,59 @@
       outline: none;
     }
 
+    .sql-console-container {
+      margin: 20px 0;
+      padding: 15px;
+      border: 2px solid var(--color-border);
+      background: #f4f4f6;
+    }
+
+    .sql-console-title {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .sql-console-help {
+      font-size: 0.85rem;
+      margin: 0 0 8px 0;
+      color: #555;
+    }
+
+    .sql-console-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #inputSQL {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid var(--color-border);
+      font-family: monospace;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--color-text);
+    }
+
+    #inputSQL:focus {
+      background: var(--color-text);
+      color: #fff;
+      outline: none;
+    }
+
+    #btnEjecutarSQL {
+      background: var(--color-primary);
+      color: #fff;
+      border: 2px solid var(--color-primary);
+      padding: 10px 20px;
+      transition: all 0.2s;
+    }
+
+    #btnEjecutarSQL:hover {
+      background: transparent;
+      color: var(--color-primary);
+    }
+
     h2 {
       font-size: 2rem;
       font-weight: 700;
@@ -521,6 +575,18 @@
 
   <div class="buscador-container">
     <input type="text" id="buscador" placeholder="Buscar en la tabla...">
+  </div>
+
+  <!-- Consola de Comandos SQL interactiva -->
+  <div class="sql-console-container">
+    <label class="sql-console-title"><i class="fa-solid fa-terminal"></i> Consola de Ejecución SQL:</label>
+    <p class="sql-console-help">
+      Usa la tabla virtual <code>notas</code>. Campos: <code>ordenCaptura, fecha, medio, titular, recurso, dependencia, organismo, tema, estatus</code>
+    </p>
+    <div class="sql-console-row">
+      <input type="text" id="inputSQL" placeholder="Ej: UPDATE notas SET estatus = 'Revisado' WHERE medio = 'El Universal'">
+      <button type="button" id="btnEjecutarSQL">Ejecutar</button>
+    </div>
   </div>
 
   <h2>Registros capturados</h2>
@@ -1041,6 +1107,52 @@
       document.getElementById("btnRecuperarDatos").addEventListener("click", recuperarDatos);
       document.getElementById("btnEnviarCapturas").addEventListener("click", enviarCapturas);
       document.getElementById("btnBorrarTodo").addEventListener("click", borrarTodo);
+
+      // Consola SQL con AlaSQL
+      document.getElementById("btnEjecutarSQL").addEventListener("click", () => {
+        const query = document.getElementById("inputSQL").value.trim();
+        if (!query) return;
+
+        try {
+          // 1. Preparar el entorno de AlaSQL mapeando tu array global
+          if (!alasql.tables || !alasql.tables.notas) {
+            alasql('CREATE TABLE notas');
+          }
+          alasql.tables.notas.data = window.notas;
+
+          if (/(update|delete|insert)/i.test(query)) {
+            // Ejecutar la consulta de modificación de datos
+            const filasAfectadas = alasql(query);
+            
+            // Sincronizar de vuelta al array global
+            window.notas = alasql.tables.notas.data;
+
+            // 2. Persistir los cambios en el almacenamiento local y refrescar la tabla
+            localStorage.setItem("notasPlanas", JSON.stringify(window.notas));
+            renderizarTabla();
+            
+            showMessage('success', `Comando ejecutado con éxito. Filas afectadas/Resultado: ${filasAfectadas}`);
+          } else if (/select/i.test(query)) {
+            // Si deseas hacer un SELECT para practicar búsquedas y filtrados complejos:
+            const resultado = alasql(query);
+            console.table(resultado); // Muestra el resultado estructurado en la consola del desarrollador (F12)
+            
+            // Opcional: Si quieres que el SELECT filtre temporalmente lo que ves en la pantalla:
+            if (Array.isArray(resultado)) {
+              window.notas = resultado;
+              renderizarTabla();
+              // Recuperamos el estado original del localStorage para no perder los datos no seleccionados
+              window.notas = JSON.parse(localStorage.getItem("notasPlanas")) || [];
+              showMessage('success', `Mostrando ${resultado.length} resultados del SELECT (F12 para ver la matriz completa)`);
+            }
+          } else {
+            showMessage('error', 'Comando no soportado de manera directa en esta consola estática.');
+          }
+        } catch (error) {
+          console.error(error);
+          showMessage('error', 'Error de Sintaxis SQL: ' + error.message);
+        }
+      });
 
       // Botones de prellenado
       document.getElementById("btnPresetDeportes").addEventListener("click", () => {
