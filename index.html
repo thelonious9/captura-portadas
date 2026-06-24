@@ -297,7 +297,58 @@
       outline: none;
     }
 
+    .sql-console-container {
+      margin: 20px 0;
+      padding: 15px;
+      border: 2px solid var(--color-border);
+      background: #f4f4f6;
+    }
 
+    .sql-console-title {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .sql-console-help {
+      font-size: 0.85rem;
+      margin: 0 0 8px 0;
+      color: #555;
+    }
+
+    .sql-console-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #inputSQL {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid var(--color-border);
+      font-family: monospace;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--color-text);
+    }
+
+    #inputSQL:focus {
+      background: var(--color-text);
+      color: #fff;
+      outline: none;
+    }
+
+    #btnEjecutarSQL {
+      background: var(--color-primary);
+      color: #fff;
+      border: 2px solid var(--color-primary);
+      padding: 10px 20px;
+      transition: all 0.2s;
+    }
+
+    #btnEjecutarSQL:hover {
+      background: transparent;
+      color: var(--color-primary);
+    }
 
     h2 {
       font-size: 2rem;
@@ -526,11 +577,16 @@
     <input type="text" id="buscador" placeholder="Buscar en la tabla...">
   </div>
 
-  <!-- Botón para abrir el entorno SQL en ventanas independientes -->
-  <div style="margin: 20px 0; text-align: right;">
-    <button type="button" id="btnEntornoSQL" style="background: #2b2e63; color: #fff; padding: 12px 24px; border: none; font-weight: bold; cursor: pointer;">
-      <i class="fa-solid fa-database"></i> Abrir Entorno de Práctica SQL
-    </button>
+  <!-- Consola de Comandos SQL interactiva -->
+  <div class="sql-console-container">
+    <label class="sql-console-title"><i class="fa-solid fa-terminal"></i> Consola de Ejecución SQL:</label>
+    <p class="sql-console-help">
+      Usa la tabla virtual <code>notas</code>. Campos: <code>ordenCaptura, fecha, medio, titular, recurso, dependencia, organismo, tema, estatus</code>
+    </p>
+    <div class="sql-console-row">
+      <input type="text" id="inputSQL" placeholder="Ej: UPDATE notas SET estatus = 'Revisado' WHERE medio = 'El Universal'">
+      <button type="button" id="btnEjecutarSQL">Ejecutar</button>
+    </div>
   </div>
 
   <h2>Registros capturados</h2>
@@ -1052,176 +1108,50 @@
       document.getElementById("btnEnviarCapturas").addEventListener("click", enviarCapturas);
       document.getElementById("btnBorrarTodo").addEventListener("click", borrarTodo);
 
-      // Sincronizar cambios desde el entorno SQL (u otras ventanas)
-      window.addEventListener('storage', (e) => {
-        if (e.key === 'notasPlanas') {
-          const stored = localStorage.getItem("notasPlanas");
-          if (stored) {
-            try {
-              window.notas = JSON.parse(stored) || [];
-            } catch {
-              window.notas = [];
+      // Consola SQL con AlaSQL
+      document.getElementById("btnEjecutarSQL").addEventListener("click", () => {
+        const query = document.getElementById("inputSQL").value.trim();
+        if (!query) return;
+
+        try {
+          // 1. Preparar el entorno de AlaSQL mapeando tu array global
+          if (!alasql.tables || !alasql.tables.notas) {
+            alasql('CREATE TABLE notas');
+          }
+          alasql.tables.notas.data = window.notas;
+
+          if (/(update|delete|insert)/i.test(query)) {
+            // Ejecutar la consulta de modificación de datos
+            const filasAfectadas = alasql(query);
+            
+            // Sincronizar de vuelta al array global
+            window.notas = alasql.tables.notas.data;
+
+            // 2. Persistir los cambios en el almacenamiento local y refrescar la tabla
+            localStorage.setItem("notasPlanas", JSON.stringify(window.notas));
+            renderizarTabla();
+            
+            showMessage('success', `Comando ejecutado con éxito. Filas afectadas/Resultado: ${filasAfectadas}`);
+          } else if (/select/i.test(query)) {
+            // Si deseas hacer un SELECT para practicar búsquedas y filtrados complejos:
+            const resultado = alasql(query);
+            console.table(resultado); // Muestra el resultado estructurado en la consola del desarrollador (F12)
+            
+            // Opcional: Si quieres que el SELECT filtre temporalmente lo que ves en la pantalla:
+            if (Array.isArray(resultado)) {
+              window.notas = resultado;
+              renderizarTabla();
+              // Recuperamos el estado original del localStorage para no perder los datos no seleccionados
+              window.notas = JSON.parse(localStorage.getItem("notasPlanas")) || [];
+              showMessage('success', `Mostrando ${resultado.length} resultados del SELECT (F12 para ver la matriz completa)`);
             }
           } else {
-            window.notas = [];
+            showMessage('error', 'Comando no soportado de manera directa en esta consola estática.');
           }
-          renderizarTabla();
+        } catch (error) {
+          console.error(error);
+          showMessage('error', 'Error de Sintaxis SQL: ' + error.message);
         }
-      });
-
-      // Abrir Entorno de Práctica SQL en ventanas independientes
-      document.getElementById("btnEntornoSQL").addEventListener("click", () => {
-        // 1. Contenido HTML de la Consola
-        const consolaHTML = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Consola SQL - Panel de Control</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/alasql@4"></` + `script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: #1e1e24; color: #fff; }
-    .box { border: 1px solid #333; background: #252529; padding: 20px; border-radius: 4px; }
-    textarea { width: 100%; height: 120px; background: #111; color: #00ff66; font-family: monospace; font-size: 1.1rem; padding: 10px; border: 1px solid #444; box-sizing: border-box; resize: none; }
-    button { background: #007acc; color: white; padding: 12px 20px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; }
-    button:hover { background: #0062a3; }
-    #mensaje { margin-top: 15px; padding: 10px; display: none; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <h2><i class="fa-solid fa-terminal"></i> Consola Avanzada AlaSQL</h2>
-  <div class="box">
-    <label style="display:block; margin-bottom:10px;">Escribe tu comando SQL aquí:</label>
-    <p style="color: #aaa; font-size: 0.85rem; margin-top:0;">Tabla disponible: <code>notas</code>. Campos: <code>ordenCaptura, fecha, medio, titular, recurso, dependencia, organismo, tema, estatus</code></p>
-    <textarea id="inputSQL" placeholder="UPDATE notas SET tema = 'Días santos' WHERE tema = 'Semana Santa'"></textarea>
-    <div style="margin-top:15px; text-align: right;">
-      <small style="color:#888; margin-right:15px;">Presiona <strong>Ctrl + Enter</strong> para ejecutar rápido</small>
-      <button id="btnEjecutar">Ejecutar Comando</button>
-    </div>
-    <div id="mensaje"></div>
-  </div>
-
-  <script>
-    const btn = document.getElementById("btnEjecutar");
-    const input = document.getElementById("inputSQL");
-    const msg = document.getElementById("mensaje");
-
-    function mostrarMensaje(tipo, texto) {
-      msg.style.display = "block";
-      msg.style.background = tipo === "success" ? "#1b4332" : "#4a1212";
-      msg.style.color = tipo === "success" ? "#75e6a2" : "#ff8888";
-      msg.innerText = texto;
-    }
-
-    function ejecutarQuery() {
-      const query = input.value.trim();
-      if(!query) return;
-
-      try {
-        let notasLocales = JSON.parse(localStorage.getItem("notasPlanas")) || [];
-
-        if (/(update|delete|insert)/i.test(query)) {
-          const filasAfectadas = alasql(query, [notasLocales]);
-          localStorage.setItem("notasPlanas", JSON.stringify(notasLocales));
-          window.dispatchEvent(new Event('storage'));
-          localStorage.setItem("sql_update_trigger", Date.now());
-          mostrarMensaje("success", "Comando ejecutado. Filas afectadas: " + filasAfectadas);
-        } else if (/select/i.test(query)) {
-          const resultado = alasql(query, [notasLocales]);
-          console.table(resultado);
-          mostrarMensaje("success", "SELECT ejecutado. Revisa la consola F12.");
-          localStorage.setItem("sql_select_preview", JSON.stringify(resultado));
-        }
-      } catch(err) {
-        mostrarMensaje("error", "Error SQL: " + err.message);
-      }
-    }
-
-    btn.addEventListener("click", ejecutarQuery);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        ejecutarQuery();
-      }
-    });
-  </` + `script>
-</body>
-</html>`;
-
-        // 2. Contenido HTML del Visor de la Tabla
-        const tablaHTML = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Visor de Datos de Primeras Planas</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: #fafafa; color: #15173D; }
-    h2 { border-bottom: 2px solid #15173D; padding-bottom: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
-    th, td { border: 1px solid #15173D; padding: 10px; text-align: left; }
-    th { background: #15173D; color: #fff; }
-    tr:nth-child(even) { background: #f2f2f5; }
-    .badge { background: #e2e2e9; padding: 2px 6px; font-size: 0.8rem; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <h2><i class="fa-solid fa-table"></i> Registros en Tiempo Real</h2>
-  <div id="contenedorTabla">Cargando registros...</div>
-
-  <script>
-    function cargarYRenderizar() {
-      let datos = JSON.parse(localStorage.getItem("sql_select_preview"));
-      if (!datos) {
-        datos = JSON.parse(localStorage.getItem("notasPlanas")) || [];
-      } else {
-        localStorage.removeItem("sql_select_preview");
-      }
-
-      const contenedor = document.getElementById("contenedorTabla");
-      if(datos.length === 0) {
-        contenedor.innerHTML = "<p>No hay registros para mostrar.</p>";
-        return;
-      }
-
-      let html = "<table><thead><tr><th>Op</th><th>Fecha</th><th>Medio</th><th>Titular</th><th>Dependencia / Organismo</th><th>Tema</th><th>Estatus</th></tr></thead><tbody>";
-      datos.forEach(n => {
-        html += \`<tr>
-          <td><span class="badge">\${n.ordenCaptura || ''}</span></td>
-          <td>\${n.fecha || ''}</td>
-          <td><strong>\${n.medio || ''}</strong></td>
-          <td>\${n.titular || ''}</td>
-          <td>\${n.dependencia || ''}\${n.organismo ? ' / ' + n.organismo : ''}</td>
-          <td>\${n.tema || ''}</td>
-          <td>\${n.estatus || ''}</td>
-        </tr>\`;
-      });
-      html += "</tbody></table>";
-      contenedor.innerHTML = html;
-    }
-
-    cargarYRenderizar();
-
-    window.addEventListener('storage', cargarYRenderizar);
-    setInterval(() => {
-      if(localStorage.getItem("sql_select_preview") || localStorage.getItem("sql_update_trigger")) {
-        localStorage.removeItem("sql_update_trigger");
-        cargarYRenderizar();
-      }
-    }, 600);
-  </` + `script>
-</body>
-</html>`;
-
-        // Crear Blobs con UTF-8 explícito para evitar problemas de codificación
-        const blobConsola = new Blob([consolaHTML], { type: "text/html;charset=utf-8" });
-        const blobTabla = new Blob([tablaHTML], { type: "text/html;charset=utf-8" });
-
-        const urlConsola = URL.createObjectURL(blobConsola);
-        const urlTabla = URL.createObjectURL(blobTabla);
-
-        window.open(urlConsola, "ConsolaSQLWin", "width=600,height=500,top=100,left=100");
-        window.open(urlTabla, "TablaSQLWin", "width=900,height=600,top=100,left=720");
       });
 
       // Botones de prellenado
