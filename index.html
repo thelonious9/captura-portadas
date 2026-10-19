@@ -870,6 +870,49 @@
       const faltantes = obligatorios.filter(k => !nuevaNota[k]);
       if (faltantes.length) { showMessage('error', 'Faltan: ' + faltantes.join(', ')); return; }
 
+      // Validar que los campos de catálogo coincidan con sus listas desplegables
+      const buscarEnLista = (lista, valor) => lista.find(item => item.trim().toLowerCase() === valor.toLowerCase());
+
+      const medioValido = buscarEnLista(sugerenciasFuente("medio"), nuevaNota.medio);
+      if (!medioValido) {
+        showMessage('error', 'El Medio ingresado no es válido');
+        document.getElementById("medio").focus();
+        return;
+      }
+      nuevaNota.medio = medioValido;
+
+      const recursoValido = buscarEnLista(sugerenciasFuente("recurso"), nuevaNota.recurso);
+      if (!recursoValido) {
+        showMessage('error', 'El Recurso editorial ingresado no es válido');
+        document.getElementById("recurso").focus();
+        return;
+      }
+      nuevaNota.recurso = recursoValido;
+
+      const depValida = buscarEnLista(sugerenciasFuente("dependencia"), nuevaNota.dependencia);
+      if (!depValida) {
+        showMessage('error', 'La Dependencia ingresada no es válida');
+        document.getElementById("dependencia").focus();
+        return;
+      }
+      nuevaNota.dependencia = depValida;
+
+      const organValido = buscarEnLista(sugerenciasFuente("organismo"), nuevaNota.organismo);
+      if (!organValido) {
+        showMessage('error', 'El Organismo ingresado no es válido para la Dependencia seleccionada');
+        document.getElementById("organismo").focus();
+        return;
+      }
+      nuevaNota.organismo = organValido;
+
+      const estatusValido = buscarEnLista(sugerenciasFuente("estatus"), nuevaNota.estatus);
+      if (!estatusValido) {
+        showMessage('error', 'El Estatus ingresado no es válido');
+        document.getElementById("estatus").focus();
+        return;
+      }
+      nuevaNota.estatus = estatusValido;
+
       if (window.filaEnEdicion !== null) {
         nuevaNota.ordenCaptura = window.notas[window.filaEnEdicion].ordenCaptura;
         window.notas[window.filaEnEdicion] = nuevaNota;
