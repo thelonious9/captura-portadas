@@ -1,10 +1,6 @@
 ﻿Tema
 8M
-<<<<<<< HEAD
-Número de emergencias
-=======
 A qué sabe la patria
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
 Abandono de adultos mayores
 Abandono de obra
 Abasto De Agua
@@ -30,6 +26,7 @@ Accidente de patrulla
 Accidente De Pipa
 Accidente de tren
 Accidente de vehículo oficial
+Accidente en mina
 Accidente en obra
 Accidente feria
 Accidente informe
@@ -66,17 +63,15 @@ Afluencia Tuzobús
 Agenda gobernador
 Agresión
 Agresion a docente
+Agresión a funcionario público
 Agresión a ministerial
 Agresión a periodista
 Agresión a policía
-<<<<<<< HEAD
-=======
 Agresión a servidor público
 Agresión a transportistas
 Agresión animal
 Agresión de funcionario
 Agresión de funcionario público
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
 Agresión huachicoleros
 Agresión transportista
 Aguas negras
@@ -113,13 +108,9 @@ Amnistía
 Amonestación pública
 Amparo
 Ampliación carretera
-<<<<<<< HEAD
-Ampliación Tuzobús
-=======
 Ampliación de horario
 Ampliación Tuzobús
 Anexos de rehabilitación
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
 Aniversario de la Constitución
 Aniversario de la Transformación
 Aniversario luctuoso
@@ -169,10 +160,7 @@ Arrendamiento
 Arrendamiento de recintos
 Asalto a balneario
 Asalto a comercio
-<<<<<<< HEAD
-=======
 Asalto a oficinas
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
 Asalto a transporte público
 Asalto frustrado
 Asamblea informativa
@@ -228,10 +216,7 @@ Bacheadora
 Bacheo
 Baches
 Bachillerato Nacional
-<<<<<<< HEAD
-=======
 Bajada de San José
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
 Bajas temperaturas
 Bajos salarios
 Banda Sinfónica
@@ -283,11 +268,8 @@ Campaña de reciclaje
 Campaña de vacunación
 Campeonato Centroamericano
 Campeonato de robótica
-<<<<<<< HEAD
-=======
 Campeonato internacional
 Campeonato mundial
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
 Canasta básica
 Cancelación de proyectos
 Cáncer De Mama
@@ -532,6 +514,7 @@ Decomiso de armamento
 Decomiso de armas
 Decomiso de piratería
 Decomiso de pirotecnia
+Defensa de la Transformación
 Defensa del trabajador
 Deficiencias Centro de Salud
 Deficiencias Ceresos
@@ -787,6 +770,7 @@ Exhumación
 Exigen destitución de director
 Exigen destitución de docente
 Exigen destitución de funcionario
+Exigen director
 Exigen docente
 Exigen Esclarecer Feminicidio
 Exigen esclarecer homicidio
@@ -848,6 +832,7 @@ Feria Patronal
 Feria tradicional
 Festejo
 Festival Cultural
+Festival de la Huasteca
 Festival de Pueblos Indígenas
 Festival Del Paste
 Festival Gastronómico
@@ -858,6 +843,7 @@ Fiesta en oficina pública
 Fiestas Patrias
 Filtración de información
 Financiamiento a Partidos
+Financiamiento de proyectos culturales
 Financiamiento educativo
 Financiamiento municipios
 Firma De Convenio
@@ -900,6 +886,7 @@ Gaschicol
 Gasoducto
 Gasolinera del Bienestar
 Gatopardismo
+Géiser
 Generación De Empleo
 Gentrificación
 Gerardo Sosa
@@ -939,6 +926,7 @@ Hospital veterinario
 Hostigamiento Laboral
 Huachicol
 Huachicol fiscal
+Huachileche
 Huachitúnel
 Huracán Priscilla
 Identificación de cadáveres
@@ -950,6 +938,8 @@ Impericia
 Imposición de delegados
 Impuesto a remesas
 Impugnación
+Impulso a artesanos
+Impulso a atersanos
 Impulso a ciencia y tecnología
 Impulso a la ciencia
 Impulso a la cultura
@@ -1067,6 +1057,7 @@ Jerarquía de la Movilidad
 Jornada de cirugías
 Jornada de salud
 Jornada médica
+Jornada por la paz
 Jornadas por la Paz
 Juicio Político
 Juicios orales
@@ -1122,8 +1113,6 @@ Mala atención médica
 MALOS MANEJOS
 Maltrato animal
 Maltrato infantil
-Mañanera de Hidalgo
-Mañanera del Pueblo
 Mando Coordinado
 Manejo De Redes Sociales
 Manejo de residuos
@@ -1131,6 +1120,8 @@ Manifestación CNTE
 Manifestación informe
 Mano de obra calificada
 Mantenimiento de semáforos
+Mañanera de Hidalgo
+Mañanera del Pueblo
 Marcha 8M
 Marcha LGBTTTIQ+
 Matricula Escolar
@@ -1154,6 +1145,7 @@ Mercados
 Mes Del Adulto Mayor
 Mes del orgullo
 Mesas de acercamiento
+Mestranza
 Migración
 Migrantes
 Militancia Partidista
@@ -1173,11 +1165,8 @@ Monitoreo ambiental
 Monitoreo de especies
 Monitoreo de presas
 Monitoreo de ríos
-<<<<<<< HEAD
-=======
 MONTACHOQUES
 Monte Pío
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
 Mosco Culex
 Movilidad Académica
 Movilidad incluyente
@@ -1212,6 +1201,7 @@ Municipalismo
 Municipalización
 Municipio 85
 Muralismo
+Museo comunitario
 Museo de la Ciudad
 Museos
 NACIONALES CONADE
@@ -1303,7 +1293,9 @@ Pérdida de registro
 Perfil académico
 Perforación de pozo
 Periodo vacacional
+Permanencia escolar
 Permiso de construcción
+Persecución policiaca
 Persecución política
 Personas desaparecidas
 Perspectiva de género
@@ -1397,6 +1389,7 @@ PROMESAS DE CAMPAÑA
 Promoción De La Salud
 PROMOCIÓN PERSONALIZADA
 Promoción turística
+Propiedad intelectual
 Protección ambiental
 Protección Animal
 Protección Biodiversidad
@@ -1424,6 +1417,7 @@ PTAR
 PUBLICACIÓN ACADÉMICA
 Publicidad comercial
 Publicidad gubernamental
+Pueblo con Tradición
 Pueblos con sabor
 Pueblos Mágicos
 Puente aéreo
@@ -1436,6 +1430,7 @@ QUEJA PADRES DE FAMILIA
 Queja transporte público
 QUEJAS PADRES DE FAMILIA
 Radiodifusoras
+Rapiña
 Rastro municipal
 Recaudación
 Reclutamiento
@@ -1519,9 +1514,11 @@ Rescate de persona secuestrada
 Rescate secuestro
 Resolución de investigaciones
 Resolución de juicio
+Resolución TEEH
 Respaldo a funcionario
 Respaldo a gobernador
 Respaldo a Sheinbaum
+Respaldo gobernador
 Responsabilidad parental
 Restauración ecológica
 Retención
@@ -1553,6 +1550,7 @@ REZAGO EDUCATIVO
 Riña
 Riña en penal
 Río Tula
+Robo a comercio
 ROBO A ESCUELA
 Robo A Establecimiento
 ROBO A IGLESIA
@@ -1563,6 +1561,7 @@ Robo de identidad
 Robo de infraestructura
 Robo de patrulla
 Robo de vehículo
+Robo Feria Pachuca
 Rodada ciclista
 Rotonda de los Hidalguenses Ilustres
 Rubén Rocha
@@ -1578,6 +1577,7 @@ Salarios Regidores
 Salón de la Fama
 Salón De Plenos
 Salud bucal
+Salud casa por casa
 Salud materna
 Salud Mental
 Salud sexual
@@ -1601,12 +1601,14 @@ Semana del periodismo
 Semana Santa
 Semblanza
 Semilleros creativos
-Señalética
 Senderismo
 Sentencia
 Sentencia Feminicida
 Sentencia multihomicida
+Señalética
 Sequía
+Servicio militar
+Servicios de salud
 Servicios municipales
 Servicios para el Pueblo
 Servidores del Pueblo
@@ -1615,11 +1617,8 @@ Sigapren
 Simplificación de trámites
 Simulacro sismo
 Simulador cívico
-<<<<<<< HEAD
-=======
 Sincrotrón
 Sindicato del Cemento
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
 Sismo
 Sistema Estatal Anticorrupción
 Sobrecosto
@@ -1713,6 +1712,7 @@ Turismo Comunitario
 Turismo cultural
 Turismo de aventura
 Turismo deportivo
+Turismo Gastronómico
 Turismo inclusivo
 Turismo internacional
 Turismo religioso
@@ -1771,340 +1771,4 @@ Xantolo
 Zanjas Caasim
 ZMVM
 Zona Arqueológica
-<<<<<<< HEAD
 Zoológico
-Exhumación
-Fuga de cerebros
-Consejo municipal
-Campaña de vacunación
-Estrategia de cambio climático
-Estrategia sanitaria
-Formación artística
-Gerardo Sosa
-Plagio de diseños indígenas
-Represión
-Denuncia por enriquecimiento ilícito
-Desarrollo regional
-Entrega mobiliario escolar
-Feria industrial
-Reforma a contrataciones municipales
-A qué sabe la patria
-Abuso de autoridad
-Accidente autobús
-Accidente de vehículo oficial
-Accidente informe
-Aclaración en Mañanera
-Acopio de pilas
-Activación física
-Afectaciones por viento
-Agenda gobernador
-Agresión a servidor público
-Agresión a transportistas
-Agresión animal
-Agresión de funcionario público
-Agresión transportista
-Aguas negras
-AIFA
-Alcalde ebrio
-Alerta Amber
-Allanamiento
-Amenazas al Clero
-Amnistía
-Ampliación de horario
-Antorcha Campesina
-Apoyo a artistas
-Apoyo a deportistas
-Apoyo a jóvenes
-Apoyo educativo
-Apoyo ganadero
-Apoyo para titulación
-Apropiación cultural
-Asalto a oficinas
-ASETUR
-Asistencia de parto
-Ataque animal
-Atentado
-Atropellamiento de policía
-Auditorías ASEH
-Aumento de rentas
-Ausentismo
-Bacheadora
-Bajada de San José
-Bajos salarios
-Banda Sinfónica
-BAS
-Becas del Bienestar
-Billete de lotería
-Caída de barda escolar
-Calificación de proyectos
-Cambio climático
-Cambio de adscripción
-Campeonato Centroamericano
-Campeonato mundial
-Capacitación médica
-Cateo
-CEM PAQUI
-CENSO INEGI
-Centro de Acopio Lechero
-Centros LIBRE
-Certificación de intérpretes
-Chatbot
-Cine comunitario
-Civilidad política
-Código Guinda
-Comedores escolares
-Comités Municipales
-COMPETITIVIDAD
-CONAEDU
-Concurso artesanal
-Condolencias
-Conferencia magistral
-Conflicto agrario
-Conflicto ejidal
-Conflicto por agua
-Conflicto por obra
-Congreso académico
-Consejo Estatal de Seguridad
-Consejo Municipal de Seguridad
-Conservación de edificios históricos
-Coordinación electoral
-Deceso de diputado
-Decomiso de pirotecnia
-Defensa del trabajador
-Deficiencias PC
-Deficiencias policías municipales
-Desaire
-Desfile cívico militar
-Desincorporación de bienes
-Deslealtad
-Despido
-Destrucción de armas
-Destrucción de narcóticos
-Día de la Mujer Indígena
-Día del Charro
-Día sin auto
-Diferencia salarial
-Digitalización de trámites
-Divulgación científica
-Droga en escuelas
-Educación artística
-Educación dual
-Educación integral
-Educación migrante
-Espionaje
-Estafa Maestra
-Estancia productiva
-Estudio de movilidad
-Evaluación de gabinete
-Evaluación del gasto público
-Evasión a la prensa
-Explosión de gas
-Expo agroalimentaria
-Expo artesanal
-Expropiación
-FAISM
-Falla geológica
-Falta de docente
-Felicitaciones
-Festejo
-Fiesta en oficina pública
-Fiscalización digital
-Fondo indígena
-Foros de consulta
-Franeleros
-Fuga de drenaje
-Funcionario ebrio
-Gatopardismo
-Hidalgo No Regatea
-Hidarte
-Impericia
-Impulso a la cultura
-Impulso a las artes
-IMSS-Bienestar
-Inacción policial
-Indemnización
-Índice de desarrollo
-Índice de progreso
-Informe de seguridad
-Informe TEEH
-Intento de linchamiento
-Intercambio artístico
-Interculturalidad
-Intermediarismo
-Intervención de monumentos
-Irregularidades alcalde
-Irregularidades en escuela
-Justicia alternativa
-Laboratorio de Políticas Públicas
-Liberación de carretera
-LIBERACIÓN DE VÍA
-LIDERAZGO POLÍTICO
-MADRES BUSCADORAS
-MALA ATENCIÓN
-MALOS MANEJOS
-MEDALLA AL MÉRITO
-MEDICAMENTOS CADUCOS
-MEDIDAS CAUTELARES
-MEJORA EDUCATIVA
-MEJORA REGULATORIA
-MEJORAMIENTO DE SUELO
-MENSTRUACIÓN DIGNA
-MERCADO GASTRONÓMICO
-MODIFICACIÓN DE HORARIO
-MONTACHOQUES
-Monte Pío
-MUERTE DE EMPLEADO
-MUERTE DE ESTUDIANTE
-MUERTE EN CERESO
-MUERTE MATERNA
-MUJER RURAL
-MULTAS CARRIL CONFINADO
-MUNDO CHARRO
-NACIONALES CONADE
-NEGLIGENCIA MÉDICA
-NIÑOS CANTORES
-Nuevo modelo de gobierno
-OBSTRUCCIÓN DE LA JUSTICIA
-OFERTA DE EMPLEO
-OPERACIÓN POLÍTICA
-Padrón de artesanos
-Pago De Agua
-PAQUETE ECONÓMICO
-PETICIÓN GOBERNADOR
-PISA
-PLANEACIÓN DEMOGRÁFICA
-Planificación de proyectos
-PLATAFORMA CANDIDATOS
-PLUSVALÍA
-PREMIO CIENCIA Y TECNOLOGÍA
-PREMIO ESTATAL DEL DEPORTE
-Premio internacional
-PREMIO MUNICIPAL DE LA JUVENTUD
-PRESENTACIÓN EDITORIAL
-PRESERVACIÓN LENGUAS MATERNAS
-PRESIDENCIA TSJEH
-PREVENCIÓN METEOROLÓGICA
-Proceso alcalde
-PROCURACIÓN DE JUSTICIA
-Procuración de justicia alternativa
-PRODUCCIÓN DE CEMPASÚCHIL
-PROHIBICIÓN DE PIROTECNIA
-PROMESAS DE CAMPAÑA
-PROMOCIÓN PERSONALIZADA
-Protesta de docentes
-Protesta docentes
-PROTESTA ESTUDIANTIL
-Protesta IDA
-PROTOCOLO DE PROTECCIÓN DOCENTE
-PROYECTOS COMUNITARIOS
-PROYECTOS SOCIALES
-PUBLICACIÓN ACADÉMICA
-QUEJA PADRES DE FAMILIA
-QUEJAS PADRES DE FAMILIA
-Reconstrucción de escuela
-Registro Familiar
-REGISTRO VEHICULAR
-REGRESA A CLASES CON UN ÁRBOL
-Entornos digitales seguros
-REGULARIZACIÓN DE DISPOSITIVOS DIGITALES
-REHABILITACIÓN CENTROS DE SALUD
-Representación indígena
-Rescate de cuerpo
-Resolución de investigaciones
-Responsabilidad parental
-REUNIÓN CON ALCALDE
-REVOCACIÓN DE CONCESIÓN
-REZAGO EDUCATIVO
-ROBO A ESCUELA
-ROBO A IGLESIA
-ROBO DE HIDROCARBURO
-Salud materna
-Seguridad peatonal
-Semblanza
-Semilleros creativos
-Servicios municipales
-Sobrecosto
-SUSPENSIÓN DE OBRA
-TARIFA PREFERENCIAL
-TARIFARIO FERIA PACHUCA
-TASA DE MORTALIDAD
-TAXISTA EBRIO
-TESOROS VIVOS
-TOMAS CLANDESTINAS
-TOPES VEHICULARES
-TRABAJO BAJO PROTESTA
-TRANSFERENCIA CONAFE
-TRANSMISIÓN INFORME
-Traslado de reos
-Trasvase de agua
-Trata de personas
-Tulabús
-Turismo deportivo
-Universidades del Bienestar
-Venta de apoyos sociales
-Vigilancia sanitaria
-Visa
-Premio de periodismo
-Fosa clandestina
-Asuntos religiosos
-Asistencia a informe
-Sindicato del Cemento
-Filtración de información
-Accidente feria
-Anexos de rehabilitación
-Campeonato internacional
-Capacitación a artesanos
-Certificación Anticorrupción
-Cocineras Tradicionales
-Comedores municipales
-Comités de Obra
-Consejo Nacional
-Control de incendio
-Coordinador electoral
-Coplader
-Deficiencias hospitalarias
-Derecho de Réplica
-Donación académica
-Donación De Predio
-Federalización salud
-Gasolinera del Bienestar
-Tuzobús nocturno
-Agresión de funcionario
-Arrendamiento de recintos
-Garzabús
-Informe DIFH
-Intención del voto
-Parque Cultural Hidalguense
-Permiso de construcción
-Rescate secuestro
-Sincrotrón
-Telebachillerato
-Defensa de la Transformación
-Permanencia escolar
-Accidente en mina
-Agresión a funcionario público
-Exigen director
-Festival de la Huasteca
-Financiamiento de proyectos culturales
-Géiser
-Huachileche
-Impulso a atersanos
-Jornada por la paz
-Museo comunitario
-Persecución policiaca
-Pueblo con Tradición
-Rapiña
-Resolución TEEH
-Respaldo gobernador
-Robo a comercio
-Robo Feria Pachuca
-Salud casa por casa
-Servicio militar
-Servicios de salud
-Turismo Gastronómico
-Impulso a artesanos
-Mestranza
-Propiedad intelectual
-=======
-Zoológico
->>>>>>> d9a534170734ad8c65353fcd22b2c17235a4c258
